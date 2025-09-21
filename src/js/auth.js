@@ -170,10 +170,13 @@ const AuthManager = {
                 // Cambiar a éxito
                 registerButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Registro exitoso!';
 
+                // Mostrar toast en lugar de alert
+                const successToast = new bootstrap.Toast(document.getElementById('successToast'));
+                successToast.show();
+
                 setTimeout(() => {
-                    alert('Registro exitoso. Por favor, inicia sesión.');
                     window.location.href = 'login.html';
-                }, 500);
+                }, 2000);
 
             } else {
                 let errorData;
