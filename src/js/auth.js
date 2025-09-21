@@ -15,6 +15,10 @@ const AuthManager = {
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
+        // Obtener el botón y guardarlo para restaurar después
+        const loginButton = document.querySelector('#loginForm button[type="submit"]');
+        const originalButtonText = loginButton.innerHTML;
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         console.log('Iniciando login con email:', email);
@@ -47,6 +51,10 @@ const AuthManager = {
             console.log('Validación del cliente fallida, no se envía la solicitud');
             return;
         }
+
+        // Activar loading spinner
+        loginButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Iniciando sesión...';
+        loginButton.disabled = true;
 
         try {
             console.log('Enviando petición a /api/auth/signin...');
@@ -101,10 +109,22 @@ const AuthManager = {
             console.log('Token extraído:', token);
             TokenManager.set(token);
             console.log('Token guardado en localStorage:', localStorage.getItem('token'));
-            window.location.href = 'dashboard.html';
+
+            // Cambiar a éxito antes de redirigir
+            loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Éxito!';
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
+
         } catch (error) {
             console.error('Error en login:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al iniciar sesión');
+        } finally {
+            // Solo restaurar si no fue exitoso (para evitar que se vea el cambio antes del redirect)
+            if (!TokenManager.get()) {
+                loginButton.innerHTML = originalButtonText;
+                loginButton.disabled = false;
+            }
         }
     },
 
@@ -123,9 +143,17 @@ const AuthManager = {
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
+        // Obtener el botón y guardarlo para restaurar después
+        const registerButton = document.querySelector('#registerForm button[type="submit"]');
+        const originalButtonText = registerButton.innerHTML;
+
         const nombre = document.getElementById('nombre').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+
+        // Activar loading spinner
+        registerButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Registrando...';
+        registerButton.disabled = true;
 
         try {
             console.log('Enviando petición a /api/auth/signup...');
@@ -139,8 +167,14 @@ const AuthManager = {
             console.log('Respuesta de signup:', responseText);
 
             if (response.status === 201 || response.status === 200) {
-                alert('Registro exitoso. Por favor, inicia sesión.');
-                window.location.href = 'login.html';
+                // Cambiar a éxito
+                registerButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Registro exitoso!';
+
+                setTimeout(() => {
+                    alert('Registro exitoso. Por favor, inicia sesión.');
+                    window.location.href = 'login.html';
+                }, 500);
+
             } else {
                 let errorData;
                 try {
@@ -163,10 +197,17 @@ const AuthManager = {
                 } else {
                     ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}: No se pudo registrar`);
                 }
+                throw new Error('Error en el registro');
             }
         } catch (error) {
             console.error('Error en registro:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al registrarse');
+        } finally {
+            // Solo restaurar si hubo error
+            if (registerButton.innerHTML.includes('spinner-border') || registerButton.innerHTML.includes('Registrando')) {
+                registerButton.innerHTML = originalButtonText;
+                registerButton.disabled = false;
+            }
         }
     },
 
