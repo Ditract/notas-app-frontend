@@ -1,6 +1,14 @@
 // config.js - Configuración global de la aplicación
 const CONFIG = {
-    API_BASE_URL: 'https://spring-boot-notes-api.onrender.com/api',
+    API_BASE_URL: (function () {
+        const host = window.location.hostname;
+        // Si estamos en desarrollo
+        if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+            return 'http://localhost:8080/api';  // backend local
+        } else {
+            return 'https://spring-boot-notes-api.onrender.com/api'; // producción
+        }
+    })(),
     VALIDATION: {
         TITLE_MAX_LENGTH: 255,
         CONTENT_MAX_LENGTH: 10000,
@@ -11,5 +19,5 @@ const CONFIG = {
     }
 };
 
-// Exportar configuración para otros módulos
+// Exponer globalmente
 window.CONFIG = CONFIG;

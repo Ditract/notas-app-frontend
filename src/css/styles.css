@@ -45,6 +45,113 @@ body {
     /* Altura aproximada de 4 líneas */
 }
 
+/* --- Estilos para Quill Editor --- */
+.ql-editor {
+    min-height: 200px;
+    max-height: 350px;
+    overflow-y: auto;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px 15px;
+}
+
+.ql-toolbar {
+    border-top: 1px solid #dee2e6;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background-color: #f8f9fa;
+    padding: 8px;
+}
+
+.ql-container {
+    border-bottom: 1px solid #dee2e6;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.ql-toolbar.ql-snow {
+    border: 1px solid #dee2e6;
+    border-radius: 10px 10px 0 0;
+    background-color: #f8f9fa;
+}
+
+.ql-container.ql-snow {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+}
+
+.ql-editor.ql-blank::before {
+    color: #6c757d;
+    font-style: italic;
+    left: 15px;
+    right: 15px;
+}
+
+/* Estilos para el contenido renderizado en las notas */
+.note-content-rendered {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+}
+
+.note-content-rendered h1,
+.note-content-rendered h2,
+.note-content-rendered h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.note-content-rendered h1 {
+    font-size: 1.5rem;
+}
+
+.note-content-rendered h2 {
+    font-size: 1.3rem;
+}
+
+.note-content-rendered h3 {
+    font-size: 1.1rem;
+}
+
+.note-content-rendered p {
+    margin-bottom: 0.75rem;
+}
+
+.note-content-rendered ul,
+.note-content-rendered ol {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+}
+
+.note-content-rendered li {
+    margin-bottom: 0.25rem;
+}
+
+.note-content-rendered blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 0 5px 5px 0;
+}
+
+.note-content-rendered strong {
+    font-weight: 600;
+}
+
+.note-content-rendered em {
+    font-style: italic;
+}
+
 /* --- Mejoras para Dashboard --- */
 #notesList {
     max-height: 60vh;
@@ -160,8 +267,8 @@ body {
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: pre-wrap;
-    /* Preservar saltos de línea pero permitir wrap */
+    white-space: normal;
+    /* Cambio: permitir que HTML se renderice correctamente */
     overflow-x: hidden;
     /* Prevenir scroll horizontal */
     overflow-y: auto;
@@ -293,6 +400,17 @@ body {
         font-size: 1.1rem;
         max-width: calc(100% - 40px);
     }
+
+    /* Quill responsivo en móviles */
+    .ql-toolbar {
+        padding: 6px;
+    }
+
+    .ql-editor {
+        font-size: 13px;
+        min-height: 150px;
+        max-height: 280px;
+    }
 }
 
 /* Mejoras adicionales para móviles muy pequeños */
@@ -305,5 +423,11 @@ body {
     #noteModal .modal-body {
         padding: 0.75rem;
         max-height: 50vh;
+    }
+
+    .ql-editor {
+        font-size: 12px;
+        min-height: 120px;
+        max-height: 250px;
     }
 }

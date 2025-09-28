@@ -15,7 +15,6 @@ const AuthManager = {
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
-        // Obtener el botón y guardarlo para restaurar después
         const loginButton = document.querySelector('#loginForm button[type="submit"]');
         const originalButtonText = loginButton.innerHTML;
 
@@ -64,15 +63,12 @@ const AuthManager = {
                 body: JSON.stringify({ email, password })
             });
 
-            console.log('Status de respuesta login:', response.status);
-            console.log('Headers de respuesta:', [...response.headers.entries()]);
-
+            let errorData;
             if (!response.ok) {
-                let errorData;
                 try {
                     errorData = await response.json();
                 } catch {
-                    errorData = { message: `Error ${response.status}: No se pudo procesar la respuesta` };
+                    errorData = { message: `Error ${response.status}: ${response.statusText}` };
                 }
                 console.error('Error en respuesta del login:', errorData);
 
@@ -89,9 +85,11 @@ const AuthManager = {
                 } else {
                     ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}: No se pudo iniciar sesión`);
                 }
+
                 throw new Error(errorData.message || 'Error al iniciar sesión');
             }
 
+            // Parsear JSON correctamente
             let data;
             try {
                 data = await response.json();
@@ -101,12 +99,13 @@ const AuthManager = {
                 throw new Error('La respuesta del servidor no es un JSON válido');
             }
 
+            // Validar token
             let token = data.token;
             if (!token) {
                 console.error('Estructura de respuesta inesperada:', data);
                 throw new Error('No se encontró el token en la respuesta del servidor');
             }
-            console.log('Token extraído:', token);
+
             TokenManager.set(token);
             console.log('Token guardado en localStorage:', localStorage.getItem('token'));
 
@@ -120,13 +119,14 @@ const AuthManager = {
             console.error('Error en login:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al iniciar sesión');
         } finally {
-            // Solo restaurar si no fue exitoso (para evitar que se vea el cambio antes del redirect)
-            if (!TokenManager.get()) {
+            // Restaurar botón si sigue mostrando el spinner (error)
+            if (loginButton.innerHTML.includes('spinner-border')) {
                 loginButton.innerHTML = originalButtonText;
                 loginButton.disabled = false;
             }
         }
-    },
+    }
+    ,
 
     // --- REGISTER ---
     initRegister() {
@@ -143,7 +143,6 @@ const AuthManager = {
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
-        // Obtener el botón y guardarlo para restaurar después
         const registerButton = document.querySelector('#registerForm button[type="submit"]');
         const originalButtonText = registerButton.innerHTML;
 
@@ -163,28 +162,23 @@ const AuthManager = {
                 body: JSON.stringify({ nombre, email, password })
             });
 
-            const responseText = await response.text();
-            console.log('Respuesta de signup:', responseText);
-
-            if (response.status === 201 || response.status === 200) {
-                // Cambiar a éxito
+            if (response.ok) {
+                // Éxito
                 registerButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Registro exitoso!';
-
-                // Mostrar toast en lugar de alert
                 const successToast = new bootstrap.Toast(document.getElementById('successToast'));
                 successToast.show();
 
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 2000);
-
             } else {
                 let errorData;
                 try {
-                    errorData = JSON.parse(responseText);
+                    errorData = await response.json(); // 👈 parse JSON directamente
                 } catch {
-                    errorData = { message: 'Error desconocido del servidor' };
+                    errorData = { message: `Error ${response.status}: ${response.statusText}` };
                 }
+
                 console.error('Error en signup:', errorData);
 
                 if (errorData.validationErrors) {
@@ -198,21 +192,24 @@ const AuthManager = {
                         }
                     });
                 } else {
-                    ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}: No se pudo registrar`);
+                    // Mostrar solo el mensaje principal, ignorando timestamp, status, path
+                    ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}`);
                 }
-                throw new Error('Error en el registro');
+
+                throw new Error(errorData.message || 'Error en el registro');
             }
         } catch (error) {
             console.error('Error en registro:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al registrarse');
         } finally {
-            // Solo restaurar si hubo error
+            // Restaurar botón si hubo error
             if (registerButton.innerHTML.includes('spinner-border') || registerButton.innerHTML.includes('Registrando')) {
                 registerButton.innerHTML = originalButtonText;
                 registerButton.disabled = false;
             }
         }
-    },
+    }
+    ,
 
     // --- LOGOUT ---
     initLogout() {
