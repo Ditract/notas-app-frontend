@@ -1,7 +1,8 @@
-// notes.js - Manejo de notas (crear, leer, actualizar, eliminar)
+// notes.js - Manejo de notas con Quill Editor (crear, leer, actualizar, eliminar)
 
 const NotesManager = {
     token: null,
+    quill: null, // Instancia del editor Quill
 
     init() {
         this.token = TokenManager.get();
@@ -11,9 +12,65 @@ const NotesManager = {
             return;
         }
 
+        this.initQuillEditor();
         this.initForm();
         this.initSearch();
         this.loadNotes();
+    },
+
+    // --- Inicializar Quill Editor ---
+    initQuillEditor() {
+        const toolbarOptions = [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['clean'] // remove formatting button
+        ];
+
+        this.quill = new Quill('#quill-editor', {
+            theme: 'snow',
+            placeholder: 'Escribe tu nota aquí...',
+            modules: {
+                toolbar: toolbarOptions
+            }
+        });
+
+        // Listener para sincronizar el contenido con el input oculto
+        this.quill.on('text-change', () => {
+            const content = this.quill.root.innerHTML;
+            document.getElementById('noteContent').value = content;
+
+            // Limpiar errores cuando el usuario comience a escribir
+            ErrorManager.hide('contenidoError');
+        });
+    },
+
+    // --- Función para limpiar el editor ---
+    clearEditor() {
+        if (this.quill) {
+            this.quill.setContents([]);
+            document.getElementById('noteContent').value = '';
+        }
+    },
+
+    // --- Función para obtener el contenido como texto plano para validación ---
+    getEditorTextContent() {
+        return this.quill ? this.quill.getText().trim() : '';
+    },
+
+    // --- Función para obtener el contenido HTML ---
+    getEditorHtmlContent() {
+        return this.quill ? this.quill.root.innerHTML : '';
+    },
+
+    // --- Función para convertir HTML a texto plano para búsqueda ---
+    stripHtml(html) {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
     },
 
     // --- Cargar notas ---
@@ -67,8 +124,13 @@ const NotesManager = {
         // Filtrar notas si hay término de búsqueda
         const filteredNotes = notes.filter(note => {
             if (!searchTerm) return true;
-            return note.titulo.toLowerCase().includes(searchTerm) ||
-                note.contenido.toLowerCase().includes(searchTerm);
+
+            const titleMatch = note.titulo.toLowerCase().includes(searchTerm);
+            // Convertir HTML a texto plano para búsqueda
+            const contentText = this.stripHtml(note.contenido);
+            const contentMatch = contentText.toLowerCase().includes(searchTerm);
+
+            return titleMatch || contentMatch;
         });
 
         if (filteredNotes.length === 0) {
@@ -88,13 +150,12 @@ const NotesManager = {
             const noteItem = document.createElement('div');
             noteItem.className = 'list-group-item d-flex justify-content-between align-items-start';
 
-            // Crear vista previa mejorada
-            const previewData = createNotePreview(note.titulo, note.contenido);
+            // Crear vista previa mejorada con contenido HTML
+            const previewData = this.createNotePreview(note.titulo, note.contenido);
 
-            // Escapar HTML para prevenir problemas
+            // Escapar HTML para prevenir problemas en los atributos
             const escapedTitle = escapeHtml(previewData.fullTitle);
-            const escapedContent = escapeHtml(previewData.fullContent);
-            const escapedPreview = escapeHtml(previewData.preview);
+            const escapedContent = note.contenido; // Mantener HTML para el modal
 
             noteItem.innerHTML = `
                 <div class="flex-grow-1 me-3">
@@ -102,9 +163,10 @@ const NotesManager = {
                          data-bs-toggle="modal" 
                          data-bs-target="#noteModal" 
                          data-title="${escapedTitle}" 
-                         data-content="${escapedContent}">
+                         data-content="${escapedContent}" 
+                         data-is-html="true">
                         <strong class="d-block mb-1">${escapeHtml(previewData.title)}</strong>
-                        <span class="text-muted">${escapedPreview}</span>
+                        <span class="text-muted">${escapeHtml(previewData.preview)}</span>
                     </div>
                 </div>
                 <button class="btn btn-danger btn-sm delete-note" 
@@ -116,6 +178,30 @@ const NotesManager = {
 
             notesList.appendChild(noteItem);
         });
+    },
+
+    // --- Crear vista previa de la nota ---
+    createNotePreview(title, htmlContent) {
+        const maxTitleLength = 50;
+        const maxPreviewLength = 100;
+
+        // Convertir HTML a texto plano para la vista previa
+        const plainTextContent = this.stripHtml(htmlContent);
+
+        const truncatedTitle = title.length > maxTitleLength
+            ? title.substring(0, maxTitleLength) + '...'
+            : title;
+
+        const truncatedPreview = plainTextContent.length > maxPreviewLength
+            ? plainTextContent.substring(0, maxPreviewLength) + '...'
+            : plainTextContent;
+
+        return {
+            title: truncatedTitle,
+            preview: truncatedPreview,
+            fullTitle: title,
+            fullContent: htmlContent
+        };
     },
 
     // --- Inicializar formulario ---
@@ -134,7 +220,8 @@ const NotesManager = {
         ErrorManager.hide('contenidoError');
 
         const title = document.getElementById('noteTitle').value;
-        const content = document.getElementById('noteContent').value;
+        const htmlContent = this.getEditorHtmlContent();
+        const textContent = this.getEditorTextContent();
 
         // Validación del lado del cliente
         const validation = Validators.validateForm({
@@ -149,7 +236,7 @@ const NotesManager = {
                 ]
             },
             contenido: {
-                value: content,
+                value: textContent, // Validar longitud usando texto plano
                 rules: [
                     { test: (val) => val.trim() !== '', message: 'El contenido es obligatorio' },
                     {
@@ -176,7 +263,7 @@ const NotesManager = {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.token}`
                 },
-                body: JSON.stringify({ titulo: title, contenido: content })
+                body: JSON.stringify({ titulo: title, contenido: htmlContent })
             });
 
             console.log('Status response agregar nota:', response.status);
@@ -214,8 +301,9 @@ const NotesManager = {
                 return;
             }
 
+            // Limpiar formulario después del éxito
             document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
+            this.clearEditor();
             this.loadNotes();
         } catch (error) {
             console.error('Error al agregar nota:', error);
