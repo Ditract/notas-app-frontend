@@ -139,14 +139,12 @@ const AuthManager = {
     async handleRegister(e) {
         e.preventDefault();
         ErrorManager.hide('errorMessage');
-        ErrorManager.hide('nombreError');
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
         const registerButton = document.querySelector('#registerForm button[type="submit"]');
         const originalButtonText = registerButton.innerHTML;
 
-        const nombre = document.getElementById('nombre').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
@@ -159,7 +157,7 @@ const AuthManager = {
             const response = await fetch(`${CONFIG.API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, email, password })
+                body: JSON.stringify({ email, password }) // 👈 solo email y pass
             });
 
             if (response.ok) {
@@ -174,7 +172,7 @@ const AuthManager = {
             } else {
                 let errorData;
                 try {
-                    errorData = await response.json(); // 👈 parse JSON directamente
+                    errorData = await response.json();
                 } catch {
                     errorData = { message: `Error ${response.status}: ${response.statusText}` };
                 }
@@ -182,17 +180,17 @@ const AuthManager = {
                 console.error('Error en signup:', errorData);
 
                 if (errorData.validationErrors) {
-                    Object.entries(errorData.validationErrors).forEach(([field, message]) => {
-                        const errorElement = document.getElementById(`${field}Error`);
-                        if (errorElement) {
-                            errorElement.textContent = message;
-                            errorElement.classList.remove('d-none');
-                        } else {
-                            ErrorManager.show('errorMessage', message);
+                    // Solo manejamos email y password, ignoramos nombre
+                    ["email", "password"].forEach(field => {
+                        if (errorData.validationErrors[field]) {
+                            const errorElement = document.getElementById(`${field}Error`);
+                            if (errorElement) {
+                                errorElement.textContent = errorData.validationErrors[field];
+                                errorElement.classList.remove('d-none');
+                            }
                         }
                     });
                 } else {
-                    // Mostrar solo el mensaje principal, ignorando timestamp, status, path
                     ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}`);
                 }
 
@@ -202,13 +200,13 @@ const AuthManager = {
             console.error('Error en registro:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al registrarse');
         } finally {
-            // Restaurar botón si hubo error
             if (registerButton.innerHTML.includes('spinner-border') || registerButton.innerHTML.includes('Registrando')) {
                 registerButton.innerHTML = originalButtonText;
                 registerButton.disabled = false;
             }
         }
     }
+
     ,
 
     // --- LOGOUT ---
@@ -222,7 +220,7 @@ const AuthManager = {
     handleLogout(e) {
         e.preventDefault();
         TokenManager.clear();
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 };
 

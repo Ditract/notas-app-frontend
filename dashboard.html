@@ -16,8 +16,28 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="dashboard.html"><i class="bi bi-journal-richtext"></i> Mis Notas</a>
-            <div class="navbar-nav ms-auto">
-                <button id="logoutLink" class="btn btn-outline-primary">Cerrar Sesión</button>
+            <div class="navbar-nav ms-auto d-flex align-items-center">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" href="perfil.html">
+                                <i class="bi bi-person-badge"></i> Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" id="logoutLink">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -71,6 +91,43 @@
                 <div class="modal-body note-content-rendered" id="modalNoteContent"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar nota -->
+    <div class="modal fade" id="editNoteModal" tabindex="-1" aria-labelledby="editNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="editNoteModalLabel">
+                        <i class="bi bi-pencil-square"></i> Editar Nota
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="editErrorMessage" class="alert alert-danger d-none mb-3"></div>
+                    <form id="editNoteForm">
+                        <div class="mb-3">
+                            <label for="editNoteTitle" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="editNoteTitle" placeholder="Título de la nota"
+                                required>
+                            <div id="editTituloError" class="text-danger d-none small"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNoteContent" class="form-label">Contenido</label>
+                            <div id="edit-quill-editor" style="height: 300px;"></div>
+                            <input type="hidden" id="editNoteContent" required>
+                            <div id="editContenidoError" class="text-danger d-none small"></div>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

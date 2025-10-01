@@ -1,4 +1,4 @@
-/* styles.css */
+// styles.css
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
 body {
@@ -10,6 +10,40 @@ body {
 /* --- Navbar --- */
 .navbar {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Dropdown de usuario en dashboard */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    margin-left: 0.5rem;
+}
+
+.dropdown-menu {
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: none;
+    padding: 0.5rem 0;
+    min-width: 200px;
+    position: absolute;
+    z-index: 1050;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    padding-left: 1.5rem;
+}
+
+.dropdown-item i {
+    margin-right: 0.5rem;
+    width: 20px;
 }
 
 /* --- Tarjetas (Forms y Notas) --- */
@@ -37,12 +71,10 @@ body {
 .note-content-preview {
     display: -webkit-box;
     -webkit-line-clamp: 4;
-    /* Muestra hasta 4 líneas */
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 96px;
-    /* Altura aproximada de 4 líneas */
 }
 
 /* --- Estilos para Quill Editor --- */
@@ -154,10 +186,29 @@ body {
 
 /* --- Mejoras para Dashboard --- */
 #notesList {
-    max-height: 60vh;
+    max-height: 500px;
     overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+#notesList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#notesList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#notesList::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+#notesList::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 /* Estilos mejorados para la vista previa de notas */
@@ -166,24 +217,18 @@ body {
     text-decoration: none;
     color: #343a40;
     transition: color 0.2s ease;
-    /* Prevenir desbordamiento horizontal */
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
-    /* Limitar el ancho y controlar overflow */
     max-width: 100%;
     overflow: hidden;
-    /* Permitir que el texto se envuelva en múltiples líneas */
     white-space: normal;
-    /* Limitar la altura máxima de la vista previa */
     display: -webkit-box;
     -webkit-line-clamp: 3;
-    /* Mostrar máximo 3 líneas */
     -webkit-box-orient: vertical;
     text-overflow: ellipsis;
     line-height: 1.4;
     max-height: 4.2em;
-    /* Aproximadamente 3 líneas con line-height 1.4 */
 }
 
 .note-preview:hover {
@@ -193,38 +238,50 @@ body {
 
 /* Contenedor para cada item de nota */
 .list-group-item {
-    /* Asegurar que no haya overflow horizontal */
     overflow: hidden;
     word-wrap: break-word;
-    /* Espaciado interno mejorado */
     padding: 1rem;
     border-radius: 8px !important;
     margin-bottom: 0.5rem;
     border: 1px solid #dee2e6 !important;
-}
-
-/* Asegurar que el botón de eliminar no se deforme */
-.delete-note {
+    min-height: 80px;
     flex-shrink: 0;
-    /* Evitar que el botón se encoja */
-    min-width: auto;
-    white-space: nowrap;
 }
 
-/* Contenedor flex mejorado para las notas */
-.d-flex.justify-content-between.align-items-start {
-    gap: 1rem;
-    /* Espacio entre el contenido y el botón */
-}
-
-.flex-grow-1 {
-    /* Asegurar que el contenido no desborde */
+/* Wrapper del contenido de la nota */
+.note-content-wrapper {
     min-width: 0;
-    /* Permitir que flex-grow-1 se encoja si es necesario */
     overflow: hidden;
 }
 
-/* --- Modal para notas CORREGIDO --- */
+/* Contenedor de acciones de nota */
+.note-actions {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.note-actions .btn {
+    transition: all 0.3s ease;
+}
+
+.note-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Botones de acción específicos */
+.add-favorite:hover {
+    box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
+}
+
+.edit-note:hover {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4);
+}
+
+.delete-note:hover {
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
+}
+
+/* --- Modal para notas --- */
 #noteModal .modal-dialog {
     max-width: 90vw;
     width: 800px;
@@ -245,13 +302,11 @@ body {
 }
 
 #noteModal .modal-title {
-    /* CRÍTICO: Prevenir desbordamiento del título */
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
     white-space: normal;
     max-width: calc(100% - 50px);
-    /* Dejar espacio para el botón cerrar */
     overflow: hidden;
     line-height: 1.3;
 }
@@ -263,18 +318,13 @@ body {
     border-radius: 10px;
     padding: 2rem;
     margin: 0.5rem;
-    /* CRÍTICO: Manejar contenido largo sin desbordamiento */
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    /* Cambio: permitir que HTML se renderice correctamente */
     overflow-x: hidden;
-    /* Prevenir scroll horizontal */
     overflow-y: auto;
-    /* Permitir scroll vertical si es necesario */
     max-height: 70vh;
-    /* Limitar altura máxima */
 }
 
 #noteModal .modal-footer {
@@ -362,24 +412,37 @@ body {
 @media (max-width: 768px) {
     .note-preview {
         -webkit-line-clamp: 2;
-        /* En móviles, mostrar solo 2 líneas */
         max-height: 2.8em;
     }
 
     .list-group-item {
         padding: 0.75rem;
-    }
-
-    .d-flex.justify-content-between.align-items-start {
         flex-direction: column;
-        gap: 0.5rem;
+        align-items: flex-start !important;
     }
 
-    .delete-note {
-        align-self: flex-end;
+    .note-content-wrapper {
+        width: 100%;
+        margin-bottom: 0.75rem;
     }
 
-    /* Modal responsivo en móviles */
+    .note-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .navbar-nav {
+        position: relative;
+    }
+
+    .dropdown-menu {
+        position: absolute !important;
+        right: 0;
+        left: auto;
+        top: 100%;
+        margin-top: 0.5rem;
+    }
+
     #noteModal .modal-dialog {
         max-width: 95vw;
         margin: 0.5rem auto;
@@ -401,7 +464,6 @@ body {
         max-width: calc(100% - 40px);
     }
 
-    /* Quill responsivo en móviles */
     .ql-toolbar {
         padding: 6px;
     }
@@ -413,7 +475,6 @@ body {
     }
 }
 
-/* Mejoras adicionales para móviles muy pequeños */
 @media (max-width: 480px) {
     #noteModal .modal-dialog {
         max-width: 98vw;
@@ -429,5 +490,10 @@ body {
         font-size: 12px;
         min-height: 120px;
         max-height: 250px;
+    }
+
+    .note-actions .btn {
+        padding: 4px 10px;
+        font-size: 0.875rem;
     }
 }
