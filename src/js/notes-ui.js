@@ -1,3 +1,4 @@
+// notes-ui.js
 document.addEventListener('DOMContentLoaded', () => {
     // Modal para ver nota completa
     const noteModal = document.getElementById('noteModal');
@@ -6,23 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Abriendo modal de visualización de nota');
             const triggerButton = event.relatedTarget;
             const title = triggerButton.getAttribute('data-title');
-            const content = triggerButton.getAttribute('data-content');
+            const content = triggerButton.noteContent;
             const isHtml = triggerButton.getAttribute('data-is-html') === 'true';
 
-            // Establecer título con manejo de overflow
             const modalTitle = document.getElementById('noteModalLabel');
             modalTitle.textContent = title;
 
-            // Establecer contenido
             const modalBody = document.getElementById('modalNoteContent');
 
             if (isHtml && content) {
-                // Si el contenido es HTML (notas creadas con Quill), renderizarlo directamente
-                // pero sanitizarlo para seguridad
                 modalBody.innerHTML = sanitizeHtml(content);
             } else {
-                // Para notas antiguas o contenido de texto plano, convertir saltos de línea
-                const sanitizedContent = content
+                const sanitizedContent = (content || '')
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;')
@@ -32,8 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalBody.innerHTML = sanitizedContent;
             }
         });
-    } else {
-        console.error('Elemento noteModal no encontrado');
+    }
+
+    // Modal para editar nota - Limpiar al cerrar
+    const editNoteModal = document.getElementById('editNoteModal');
+    if (editNoteModal) {
+        editNoteModal.addEventListener('hidden.bs.modal', () => {
+            console.log('Cerrando modal de edición');
+            NotesManager.currentEditingNoteId = null;
+            const editNoteTitleInput = document.getElementById('editNoteTitle');
+            if (editNoteTitleInput) {
+                editNoteTitleInput.value = '';
+            }
+            NotesManager.clearEditEditor();
+            ErrorManager.hide('editErrorMessage');
+            ErrorManager.hide('editTituloError');
+            ErrorManager.hide('editContenidoError');
+        });
     }
 
     // Modal para confirmar eliminación
@@ -41,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmDeleteModal) {
         const notesList = document.getElementById('notesList');
         if (notesList) {
+            // Manejar eliminación
             notesList.addEventListener('click', (event) => {
                 const deleteButton = event.target.closest('.delete-note');
                 if (deleteButton) {
@@ -55,52 +67,109 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log('Nota eliminada, actualizando lista');
                             bootstrap.Modal.getInstance(confirmDeleteModal).hide();
                             NotesManager.loadNotes();
-                        } else {
-                            console.error('Fallo al eliminar la nota con ID:', noteId);
                         }
                     };
-                    try {
-                        new bootstrap.Modal(confirmDeleteModal).show();
-                        console.log('Modal de confirmación abierto');
-                    } catch (error) {
-                        console.error('Error al abrir el modal de confirmación:', error);
+                    new bootstrap.Modal(confirmDeleteModal).show();
+                }
+            });
+
+            // Manejar favoritos (toggle)
+            notesList.addEventListener('click', async (event) => {
+                const favoriteButton = event.target.closest('.favorite-btn');
+                if (favoriteButton) {
+                    event.preventDefault();
+                    const noteId = parseInt(favoriteButton.getAttribute('data-note-id'));
+                    console.log('Clic en botón de favoritos, ID:', noteId);
+
+                    const isFavorite = NotesManager.favorites.has(noteId);
+                    let success;
+
+                    if (isFavorite) {
+                        success = await NotesManager.removeFromFavorites(noteId);
+                        if (success) {
+                            NotesManager.favorites.delete(noteId);
+                            favoriteButton.classList.remove('btn-warning');
+                            favoriteButton.classList.add('btn-outline-secondary');
+                            const icon = favoriteButton.querySelector('i');
+                            icon.classList.remove('bi-star-fill');
+                            icon.classList.add('bi-star');
+                            favoriteButton.title = 'Agregar a favoritos';
+                        }
+                    } else {
+                        success = await NotesManager.addToFavorites(noteId);
+                        if (success) {
+                            NotesManager.favorites.add(noteId);
+                            favoriteButton.classList.remove('btn-outline-secondary');
+                            favoriteButton.classList.add('btn-warning');
+                            const icon = favoriteButton.querySelector('i');
+                            icon.classList.remove('bi-star');
+                            icon.classList.add('bi-star-fill');
+                            favoriteButton.title = 'Quitar de favoritos';
+                        }
                     }
                 }
             });
-        } else {
-            console.error('Elemento notesList no encontrado');
+
+            // Manejar editar - Abre el modal de edición
+            notesList.addEventListener('click', (event) => {
+                const editButton = event.target.closest('.edit-note');
+                if (editButton) {
+                    event.preventDefault();
+                    const noteId = editButton.getAttribute('data-note-id');
+                    console.log('Editar nota ID:', noteId);
+
+                    // Guardar el ID antes de abrir el modal
+                    NotesManager.currentEditingNoteId = noteId;
+
+                    // Obtener la nota del cache y cargar los datos
+                    const note = NotesManager.getNoteById(noteId);
+
+                    console.log('Nota completa del cache:', note);
+
+                    if (note) {
+                        const editNoteTitleInput = document.getElementById('editNoteTitle');
+                        if (editNoteTitleInput) {
+                            editNoteTitleInput.value = note.titulo || '';
+                            console.log('Título cargado:', note.titulo);
+                        }
+
+                        if (NotesManager.editQuill && note.contenido) {
+                            const delta = NotesManager.editQuill.clipboard.convert(note.contenido);
+                            NotesManager.editQuill.setContents(delta);
+                            console.log('Contenido cargado en el editor de edición');
+                        }
+                    }
+
+                    ErrorManager.hide('editErrorMessage');
+                    ErrorManager.hide('editTituloError');
+                    ErrorManager.hide('editContenidoError');
+
+                    const editModal = new bootstrap.Modal(document.getElementById('editNoteModal'));
+                    editModal.show();
+                }
+            });
         }
-    } else {
-        console.error('Elemento confirmDeleteModal no encontrado');
     }
 });
 
-// Función para sanitizar HTML básico (permitir solo elementos seguros)
 function sanitizeHtml(html) {
-    // Crear un elemento temporal para parsear el HTML
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
-    // Lista de elementos permitidos (elementos que Quill puede generar)
     const allowedTags = ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'span'];
     const allowedAttributes = ['class', 'style'];
 
-    // Función recursiva para limpiar elementos
     function cleanElement(element) {
         const tagName = element.tagName.toLowerCase();
 
-        // Si el elemento no está permitido, reemplazarlo con su contenido de texto
         if (!allowedTags.includes(tagName)) {
             return document.createTextNode(element.textContent);
         }
 
-        // Crear nuevo elemento limpio
         const cleanEl = document.createElement(tagName);
 
-        // Copiar solo atributos permitidos
         for (const attr of element.attributes) {
             if (allowedAttributes.includes(attr.name.toLowerCase())) {
-                // Para el atributo style, solo permitir estilos seguros
                 if (attr.name.toLowerCase() === 'style') {
                     const safeStyle = sanitizeStyle(attr.value);
                     if (safeStyle) {
@@ -112,7 +181,6 @@ function sanitizeHtml(html) {
             }
         }
 
-        // Procesar hijos recursivamente
         for (const child of element.childNodes) {
             if (child.nodeType === Node.TEXT_NODE) {
                 cleanEl.appendChild(child.cloneNode(true));
@@ -127,7 +195,6 @@ function sanitizeHtml(html) {
         return cleanEl;
     }
 
-    // Procesar todos los elementos hijos
     const result = document.createElement('div');
     for (const child of temp.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -143,7 +210,6 @@ function sanitizeHtml(html) {
     return result.innerHTML;
 }
 
-// Función para sanitizar estilos CSS
 function sanitizeStyle(styleStr) {
     const allowedProperties = [
         'color', 'background-color', 'font-weight', 'font-style',
@@ -157,7 +223,6 @@ function sanitizeStyle(styleStr) {
         const [property, value] = style.split(':').map(s => s.trim());
 
         if (property && value && allowedProperties.includes(property.toLowerCase())) {
-            // Validación básica del valor (evitar javascript: y similares)
             if (!value.toLowerCase().includes('javascript:') &&
                 !value.toLowerCase().includes('expression(') &&
                 !value.toLowerCase().includes('url(javascript:)')) {
