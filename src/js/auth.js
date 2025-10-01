@@ -15,6 +15,9 @@ const AuthManager = {
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
+        const loginButton = document.querySelector('#loginForm button[type="submit"]');
+        const originalButtonText = loginButton.innerHTML;
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         console.log('Iniciando login con email:', email);
@@ -48,6 +51,10 @@ const AuthManager = {
             return;
         }
 
+        // Activar loading spinner
+        loginButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Iniciando sesión...';
+        loginButton.disabled = true;
+
         try {
             console.log('Enviando petición a /api/auth/signin...');
             const response = await fetch(`${CONFIG.API_BASE_URL}/auth/signin`, {
@@ -56,15 +63,12 @@ const AuthManager = {
                 body: JSON.stringify({ email, password })
             });
 
-            console.log('Status de respuesta login:', response.status);
-            console.log('Headers de respuesta:', [...response.headers.entries()]);
-
+            let errorData;
             if (!response.ok) {
-                let errorData;
                 try {
                     errorData = await response.json();
                 } catch {
-                    errorData = { message: `Error ${response.status}: No se pudo procesar la respuesta` };
+                    errorData = { message: `Error ${response.status}: ${response.statusText}` };
                 }
                 console.error('Error en respuesta del login:', errorData);
 
@@ -81,9 +85,11 @@ const AuthManager = {
                 } else {
                     ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}: No se pudo iniciar sesión`);
                 }
+
                 throw new Error(errorData.message || 'Error al iniciar sesión');
             }
 
+            // Parsear JSON correctamente
             let data;
             try {
                 data = await response.json();
@@ -93,20 +99,34 @@ const AuthManager = {
                 throw new Error('La respuesta del servidor no es un JSON válido');
             }
 
+            // Validar token
             let token = data.token;
             if (!token) {
                 console.error('Estructura de respuesta inesperada:', data);
                 throw new Error('No se encontró el token en la respuesta del servidor');
             }
-            console.log('Token extraído:', token);
+
             TokenManager.set(token);
             console.log('Token guardado en localStorage:', localStorage.getItem('token'));
-            window.location.href = 'dashboard.html';
+
+            // Cambiar a éxito antes de redirigir
+            loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Éxito!';
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
+
         } catch (error) {
             console.error('Error en login:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al iniciar sesión');
+        } finally {
+            // Restaurar botón si sigue mostrando el spinner (error)
+            if (loginButton.innerHTML.includes('spinner-border')) {
+                loginButton.innerHTML = originalButtonText;
+                loginButton.disabled = false;
+            }
         }
-    },
+    }
+    ,
 
     // --- REGISTER ---
     initRegister() {
@@ -119,56 +139,75 @@ const AuthManager = {
     async handleRegister(e) {
         e.preventDefault();
         ErrorManager.hide('errorMessage');
-        ErrorManager.hide('nombreError');
         ErrorManager.hide('emailError');
         ErrorManager.hide('passwordError');
 
-        const nombre = document.getElementById('nombre').value;
+        const registerButton = document.querySelector('#registerForm button[type="submit"]');
+        const originalButtonText = registerButton.innerHTML;
+
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+
+        // Activar loading spinner
+        registerButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Registrando...';
+        registerButton.disabled = true;
 
         try {
             console.log('Enviando petición a /api/auth/signup...');
             const response = await fetch(`${CONFIG.API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, email, password })
+                body: JSON.stringify({ email, password }) // 👈 solo email y pass
             });
 
-            const responseText = await response.text();
-            console.log('Respuesta de signup:', responseText);
+            if (response.ok) {
+                // Éxito
+                registerButton.innerHTML = '<i class="bi bi-check-circle me-2"></i>¡Registro exitoso!';
+                const successToast = new bootstrap.Toast(document.getElementById('successToast'));
+                successToast.show();
 
-            if (response.status === 201 || response.status === 200) {
-                alert('Registro exitoso. Por favor, inicia sesión.');
-                window.location.href = 'login.html';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
             } else {
                 let errorData;
                 try {
-                    errorData = JSON.parse(responseText);
+                    errorData = await response.json();
                 } catch {
-                    errorData = { message: 'Error desconocido del servidor' };
+                    errorData = { message: `Error ${response.status}: ${response.statusText}` };
                 }
+
                 console.error('Error en signup:', errorData);
 
                 if (errorData.validationErrors) {
-                    Object.entries(errorData.validationErrors).forEach(([field, message]) => {
-                        const errorElement = document.getElementById(`${field}Error`);
-                        if (errorElement) {
-                            errorElement.textContent = message;
-                            errorElement.classList.remove('d-none');
-                        } else {
-                            ErrorManager.show('errorMessage', message);
+                    // Solo manejamos email y password, ignoramos nombre
+                    ["email", "password"].forEach(field => {
+                        if (errorData.validationErrors[field]) {
+                            const errorElement = document.getElementById(`${field}Error`);
+                            if (errorElement) {
+                                errorElement.textContent = errorData.validationErrors[field];
+                                errorElement.classList.remove('d-none');
+                            }
                         }
                     });
                 } else {
-                    ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}: No se pudo registrar`);
+                    ErrorManager.show('errorMessage', errorData.message || `Error ${response.status}`);
                 }
+
+                throw new Error(errorData.message || 'Error en el registro');
             }
         } catch (error) {
             console.error('Error en registro:', error);
             ErrorManager.show('errorMessage', error.message || 'Ocurrió un error al registrarse');
+        } finally {
+            if (registerButton.innerHTML.includes('spinner-border') || registerButton.innerHTML.includes('Registrando')) {
+                registerButton.innerHTML = originalButtonText;
+                registerButton.disabled = false;
+            }
         }
-    },
+    }
+
+    ,
 
     // --- LOGOUT ---
     initLogout() {
@@ -181,7 +220,7 @@ const AuthManager = {
     handleLogout(e) {
         e.preventDefault();
         TokenManager.clear();
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 };
 

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Notas App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="stylesheet" href="src/css/perfil.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="dashboard.html"><i class="bi bi-journal-richtext"></i> Mis Notas</a>
+            <div class="navbar-nav ms-auto d-flex align-items-center">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" href="dashboard.html">
+                                <i class="bi bi-house-door"></i> Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" id="logoutLink">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5">
+        <div class="row">
+            <!-- Perfil Info -->
+            <div class="col-lg-4 mb-4">
+                <div class="card profile-card">
+                    <div class="card-body text-center">
+                        <div class="profile-avatar mb-3">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <h4 id="profileName" class="mb-1">Cargando...</h4>
+                        <p id="profileEmail" class="text-muted">correo@ejemplo.com</p>
+                        <div class="profile-stats mt-4">
+                            <div class="stat-item">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span id="favoritesCount">0</span>
+                                <small class="d-block text-muted">Favoritas</small>
+                            </div>
+                        </div>
+                        <div class="profile-actions mt-3">
+                            <button class="btn btn-light w-100 mb-2" data-bs-toggle="modal"
+                                data-bs-target="#editNameModal">
+                                <i class="bi bi-person-badge"></i> Actualizar Nombre
+                            </button>
+                            <button class="btn btn-light w-100 mb-2" data-bs-toggle="modal"
+                                data-bs-target="#editPasswordModal">
+                                <i class="bi bi-key"></i> Actualizar Contraseña
+                            </button>
+                            <button class="btn btn-light w-100 mb-2" data-bs-toggle="modal"
+                                data-bs-target="#editEmailModal">
+                                <i class="bi bi-envelope"></i> Actualizar Email
+                            </button>
+                            <button class="btn btn-light w-100" data-bs-toggle="modal" data-bs-target="#backupModal">
+                                <i class="bi bi-cloud-download"></i> Copia de Seguridad
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notas Favoritas -->
+            <div class="col-lg-8">
+                <h3 class="mb-4"><i class="bi bi-star-fill text-warning"></i> Mis Notas Favoritas</h3>
+                <div id="favoritesErrorMessage" class="alert alert-danger d-none mb-3"></div>
+                <div id="favoritesList" class="list-group">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para editar nombre -->
+    <div class="modal fade" id="editNameModal" tabindex="-1" aria-labelledby="editNameModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="editNameModalLabel">
+                        <i class="bi bi-person-badge"></i> Actualizar Nombre
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profileErrorMessage" class="alert alert-danger d-none mb-3"></div>
+                    <div id="profileSuccessMessage" class="alert alert-success d-none mb-3"></div>
+
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label for="profileNameInput" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="profileNameInput" placeholder="Tu nombre"
+                                required>
+                            <div id="nombreError" class="text-danger d-none small"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-lg"></i> Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para actualizar contraseña (placeholder) -->
+    <div class="modal fade" id="editPasswordModal" tabindex="-1" aria-labelledby="editPasswordModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="editPasswordModalLabel">
+                        <i class="bi bi-key"></i> Actualizar Contraseña
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted text-center py-4">
+                        <i class="bi bi-wrench-adjustable fs-1 d-block mb-3"></i>
+                        Esta función estará disponible próximamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para actualizar email (placeholder) -->
+    <div class="modal fade" id="editEmailModal" tabindex="-1" aria-labelledby="editEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="editEmailModalLabel">
+                        <i class="bi bi-envelope"></i> Actualizar Email
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted text-center py-4">
+                        <i class="bi bi-wrench-adjustable fs-1 d-block mb-3"></i>
+                        Esta función estará disponible próximamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para copia de seguridad (placeholder) -->
+    <div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="backupModalLabel">
+                        <i class="bi bi-cloud-download"></i> Copia de Seguridad
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted text-center py-4">
+                        <i class="bi bi-wrench-adjustable fs-1 d-block mb-3"></i>
+                        Esta función estará disponible próximamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver nota completa -->
+    <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="noteModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body note-content-rendered" id="modalNoteContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar quitar de favoritos -->
+    <div class="modal fade" id="confirmRemoveFavoriteModal" tabindex="-1" aria-labelledby="confirmRemoveFavoriteLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="confirmRemoveFavoriteLabel">
+                        <i class="bi bi-star text-warning"></i> Quitar de Favoritos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-star-fill text-warning fs-1 mb-3 d-block"></i>
+                    <p class="mb-0">¿Deseas quitar esta nota de tus favoritos?</p>
+                    <small class="text-muted">Podrás volver a agregarla cuando quieras.</small>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmRemoveButton">
+                        <i class="bi bi-star"></i> Quitar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <span class="text-muted">© 2025 Notas App.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="src/js/config.js"></script>
+    <script src="src/js/utils.js"></script>
+    <script src="src/js/auth.js"></script>
+    <script src="src/js/perfil.js"></script>
+    <script src="src/js/perfil-ui.js"></script>
+</body>
+
+</html>
