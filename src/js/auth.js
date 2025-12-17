@@ -32,7 +32,15 @@ const AuthManager = {
 
             if (!response.ok) {
                 console.error('Error en respuesta del login:', data);
-                this._handleValidationErrors(data);
+
+                // Mensaje especial para cuenta no verificada
+                if (response.status === 401 && data.message && data.message.toLowerCase().includes('verificad')) {
+                    ErrorManager.show('errorMessage',
+                        'Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico y haz clic en el enlace de verificación.'
+                    );
+                } else {
+                    this._handleValidationErrors(data);
+                }
                 return;
             }
 
@@ -61,7 +69,7 @@ const AuthManager = {
 
     async handleRegister(e) {
         e.preventDefault();
-        this._clearErrors(['errorMessage', 'emailError', 'passwordError']);
+        this._clearErrors(['errorMessage', 'emailError', 'passwordError', 'successMessage']);
 
         const registerButton = document.querySelector('#registerForm button[type="submit"]');
         const originalButtonText = registerButton.innerHTML;
@@ -86,11 +94,25 @@ const AuthManager = {
                 return;
             }
 
+            // Registro exitoso - Mostrar mensaje del backend
+            const successMessageEl = document.getElementById('successMessage');
+            const successMessageTextEl = document.getElementById('successMessageText');
+
+            if (successMessageEl && successMessageTextEl) {
+                successMessageTextEl.textContent = data.mensaje || 'Usuario registrado exitosamente. Por favor, verifica tu correo electrónico.';
+                successMessageEl.classList.remove('d-none');
+            }
+
+            // Ocultar el formulario
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.style.display = 'none';
+            }
+
+            // Redirigir después de 5 segundos
             this._setSuccess(registerButton, '¡Registro exitoso!', () => {
-                const successToast = new bootstrap.Toast(document.getElementById('successToast'));
-                successToast.show();
-                setTimeout(() => window.location.href = 'login.html', 2000);
-            });
+                window.location.href = 'login.html';
+            }, 5000);
 
         } catch (error) {
             console.error('Error en registro:', error);
@@ -140,7 +162,7 @@ const AuthManager = {
                 const errorElement = document.getElementById(`${field}Error`);
                 if (errorElement) {
                     const msgs = Array.isArray(messages) ? messages : [messages];
-                    errorElement.innerHTML = `<ul>${msgs.map(m => `<li>${m}</li>`).join('')}</ul>`; // <-- lista de errores
+                    errorElement.innerHTML = `<ul class="mb-0">${msgs.map(m => `<li>${m}</li>`).join('')}</ul>`;
                     errorElement.classList.remove('d-none');
                 }
             });
