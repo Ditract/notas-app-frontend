@@ -3,6 +3,7 @@
 const PerfilManager = {
     token: null,
     perfilData: null,
+    userData: null, // Datos del usuario desde el token
 
     init() {
         this.token = TokenManager.get();
@@ -12,8 +13,32 @@ const PerfilManager = {
             return;
         }
 
+        // Decodificar token para obtener email
+        this.userData = this.decodeToken(this.token);
+
         this.loadPerfil();
         this.initForm();
+    },
+
+    // Decodificar JWT para extraer el email
+    decodeToken(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            const payload = JSON.parse(jsonPayload);
+            console.log('Token decodificado:', payload);
+            return {
+                email: payload.sub || payload.email, // 'sub' es el estándar JWT, pero puede ser 'email'
+                roles: payload.roles || []
+            };
+        } catch (error) {
+            console.error('Error al decodificar token:', error);
+            return { email: 'usuario@ejemplo.com', roles: [] };
+        }
     },
 
     // --- Cargar perfil ---
@@ -54,12 +79,16 @@ const PerfilManager = {
 
     // --- Renderizar perfil ---
     renderPerfil(perfil) {
+        // El email viene del token decodificado, no del perfil
         document.getElementById('profileName').textContent = perfil.nombre || 'Usuario';
-        document.getElementById('profileEmail').textContent = perfil.email || '';
+        document.getElementById('profileEmail').textContent = this.userData?.email || 'usuario@ejemplo.com';
         document.getElementById('favoritesCount').textContent = perfil.notasFavoritas?.length || 0;
 
         // Llenar el formulario
-        document.getElementById('profileNameInput').value = perfil.nombre || '';
+        const profileNameInput = document.getElementById('profileNameInput');
+        if (profileNameInput) {
+            profileNameInput.value = perfil.nombre || '';
+        }
     },
 
     // --- Inicializar formulario ---
@@ -82,6 +111,16 @@ const PerfilManager = {
         // Validación básica
         if (!nombre.trim()) {
             ErrorManager.show('nombreError', 'El nombre es obligatorio');
+            return;
+        }
+
+        if (nombre.trim().length < 3) {
+            ErrorManager.show('nombreError', 'El nombre debe tener al menos 3 caracteres');
+            return;
+        }
+
+        if (nombre.trim().length > 40) {
+            ErrorManager.show('nombreError', 'El nombre no puede exceder 40 caracteres');
             return;
         }
 
@@ -134,7 +173,6 @@ const PerfilManager = {
             ErrorManager.show('profileSuccessMessage', '¡Perfil actualizado exitosamente!');
             setTimeout(() => {
                 ErrorManager.hide('profileSuccessMessage');
-                // Cerrar modal después de 2 segundos
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editNameModal'));
                 if (modal) modal.hide();
             }, 2000);
@@ -144,7 +182,7 @@ const PerfilManager = {
         }
     },
 
-    // --- Cargar notas favoritas (solo IDs desde el perfil) ---
+    // --- Cargar notas favoritas ---
     async loadFavoritas() {
         try {
             if (!this.perfilData || !this.perfilData.notasFavoritas || this.perfilData.notasFavoritas.length === 0) {
@@ -152,7 +190,7 @@ const PerfilManager = {
                 return;
             }
 
-            // Como solo tenemos IDs, debemos cargar todas las notas del usuario y filtrar
+            // Cargar todas las notas del usuario y filtrar por favoritas
             const response = await fetch(`${CONFIG.API_BASE_URL}/notas`, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -206,7 +244,6 @@ const PerfilManager = {
 
             const previewData = this.createNotePreview(nota.titulo, nota.contenido);
             const escapedTitle = escapeHtml(previewData.fullTitle);
-            const escapedContent = nota.contenido;
 
             noteItem.innerHTML = `
                 <div class="flex-grow-1 me-3">
@@ -214,7 +251,6 @@ const PerfilManager = {
                          data-bs-toggle="modal" 
                          data-bs-target="#noteModal" 
                          data-title="${escapedTitle}" 
-                         data-content="${escapedContent}" 
                          data-is-html="true">
                         <strong class="d-block mb-1">
                             <i class="bi bi-star-fill text-warning me-1"></i>
@@ -230,11 +266,17 @@ const PerfilManager = {
                 </button>
             `;
 
+            // Agregar el contenido HTML completo para el modal
+            const previewEl = noteItem.querySelector('.note-preview');
+            if (previewEl) {
+                previewEl.noteContent = nota.contenido || '';
+            }
+
             favoritesList.appendChild(noteItem);
         });
     },
 
-    // --- Crear preview de nota (mismo que notes.js) ---
+    // --- Crear preview de nota ---
     createNotePreview(title, htmlContent) {
         const maxTitleLength = 50;
         const maxPreviewLength = 100;
