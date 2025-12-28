@@ -235,62 +235,77 @@ const PerfilManager = {
 
             console.log('Status response cambiar contraseña:', response.status);
 
-            if (!response.ok) {
-                const responseText = await response.text();
-                console.error('Respuesta backend cambiar contraseña:', responseText);
-                let errorData;
-                try {
-                    errorData = JSON.parse(responseText);
-                } catch {
-                    errorData = { message: `Error ${response.status}: No se pudo procesar la respuesta` };
-                }
+            // FIX: Manejar respuestas exitosas (200, 204)
+            if (response.ok) {
+                // Respuesta exitosa
+                let data = {};
 
-                if (response.status === 401) {
-                    ErrorManager.show('passwordErrorMessage', 'Sesión expirada o token inválido. Por favor, inicia sesión nuevamente.');
-                    setTimeout(() => {
-                        TokenManager.clear();
-                        window.location.href = 'login.html';
-                    }, 2000);
-                    return;
-                }
-
-                if (response.status === 400) {
-                    // Contraseña actual incorrecta u otro error de validación
-                    if (errorData.message && errorData.message.includes('incorrecta')) {
-                        ErrorManager.show('currentPasswordError', 'La contraseña actual es incorrecta');
-                    } else if (errorData.validationErrors) {
-                        Object.entries(errorData.validationErrors).forEach(([field, message]) => {
-                            if (field === 'nuevaPassword') {
-                                ErrorManager.show('newPasswordError', message);
-                            } else if (field === 'passwordActual') {
-                                ErrorManager.show('currentPasswordError', message);
-                            } else {
-                                ErrorManager.show('passwordErrorMessage', message);
-                            }
-                        });
-                    } else {
-                        ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
+                // Intentar parsear JSON solo si hay contenido
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        console.log('Respuesta sin JSON, asumiendo éxito');
                     }
-                } else {
-                    ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
                 }
+
+                console.log('Contraseña cambiada exitosamente');
+                ToastManager.success('¡Contraseña actualizada!', data.mensaje || 'Tu contraseña ha sido actualizada exitosamente.');
+
+                // Limpiar formulario
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+
+                // Cerrar modal después de 1 segundo
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPasswordModal'));
+                    if (modal) modal.hide();
+                }, 1000);
+
                 return;
             }
 
-            // Éxito
-            const data = await response.json();
-            ToastManager.success('¡Contraseña actualizada!', data.mensaje || 'Tu contraseña ha sido actualizada exitosamente.');
+            // Si llegamos aquí, hubo un error
+            const responseText = await response.text();
+            console.error('Respuesta backend cambiar contraseña:', responseText);
+            let errorData;
+            try {
+                errorData = JSON.parse(responseText);
+            } catch {
+                errorData = { message: `Error ${response.status}: No se pudo procesar la respuesta` };
+            }
 
-            // Limpiar formulario
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmNewPassword').value = '';
+            if (response.status === 401) {
+                ErrorManager.show('passwordErrorMessage', 'Sesión expirada o token inválido. Por favor, inicia sesión nuevamente.');
+                setTimeout(() => {
+                    TokenManager.clear();
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
 
-            // Cerrar modal después de 1 segundo
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editPasswordModal'));
-                if (modal) modal.hide();
-            }, 1000);
+            if (response.status === 400) {
+                // Contraseña actual incorrecta u otro error de validación
+                if (errorData.message && errorData.message.includes('incorrecta')) {
+                    ErrorManager.show('currentPasswordError', 'La contraseña actual es incorrecta');
+                } else if (errorData.validationErrors) {
+                    Object.entries(errorData.validationErrors).forEach(([field, message]) => {
+                        if (field === 'nuevaPassword') {
+                            ErrorManager.show('newPasswordError', message);
+                        } else if (field === 'passwordActual') {
+                            ErrorManager.show('currentPasswordError', message);
+                        } else {
+                            ErrorManager.show('passwordErrorMessage', message);
+                        }
+                    });
+                } else {
+                    ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
+                }
+            } else {
+                ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
+            }
 
         } catch (error) {
             console.error('Error al cambiar contraseña:', error);
