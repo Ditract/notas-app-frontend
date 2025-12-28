@@ -1,0 +1,104 @@
+/* Estilos para toast de notificación */
+
+#toast-container {
+    z-index: 9999;
+    pointer-events: none;
+}
+
+#toast-container .toast {
+    pointer-events: auto;
+    min-width: 300px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+#toast-container .toast.hide {
+    animation: slideOutRight 0.3s ease-out;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast-body {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.toast-body i {
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+.toast-body strong {
+    font-weight: 600;
+    display: inline-block;
+}
+
+.toast-body .small {
+    font-size: 0.875rem;
+    opacity: 0.95;
+}
+
+/* Colores específicos */
+.toast.bg-success {
+    background-color: #198754 !important;
+}
+
+.toast.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.toast.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.toast.bg-warning .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.toast.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+.toast.bg-info .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Responsividad */
+@media (max-width: 576px) {
+    #toast-container {
+        left: 0;
+        right: 0;
+        padding: 1rem !important;
+    }
+
+    #toast-container .toast {
+        min-width: auto;
+        width: 100%;
+    }
+}
