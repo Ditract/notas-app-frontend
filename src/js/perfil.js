@@ -18,6 +18,7 @@ const PerfilManager = {
 
         this.loadPerfil();
         this.initForm();
+        this.initPasswordForm();
     },
 
     // Decodificar JWT para extraer el email
@@ -32,7 +33,7 @@ const PerfilManager = {
             const payload = JSON.parse(jsonPayload);
             console.log('Token decodificado:', payload);
             return {
-                email: payload.sub || payload.email, // 'sub' es el estándar JWT, pero puede ser 'email'
+                email: payload.sub || payload.email,
                 roles: payload.roles || []
             };
         } catch (error) {
@@ -79,19 +80,17 @@ const PerfilManager = {
 
     // --- Renderizar perfil ---
     renderPerfil(perfil) {
-        // El email viene del token decodificado, no del perfil
         document.getElementById('profileName').textContent = perfil.nombre || 'Usuario';
         document.getElementById('profileEmail').textContent = this.userData?.email || 'usuario@ejemplo.com';
         document.getElementById('favoritesCount').textContent = perfil.notasFavoritas?.length || 0;
 
-        // Llenar el formulario
         const profileNameInput = document.getElementById('profileNameInput');
         if (profileNameInput) {
             profileNameInput.value = perfil.nombre || '';
         }
     },
 
-    // --- Inicializar formulario ---
+    // --- Inicializar formulario de nombre ---
     initForm() {
         const profileForm = document.getElementById('profileForm');
         if (profileForm) {
@@ -99,16 +98,22 @@ const PerfilManager = {
         }
     },
 
+    // --- Inicializar formulario de contraseña ---
+    initPasswordForm() {
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', this.handleChangePassword.bind(this));
+        }
+    },
+
     // --- Actualizar perfil ---
     async handleUpdatePerfil(e) {
         e.preventDefault();
         ErrorManager.hide('profileErrorMessage');
-        ErrorManager.hide('profileSuccessMessage');
         ErrorManager.hide('nombreError');
 
         const nombre = document.getElementById('profileNameInput').value;
 
-        // Validación básica
         if (!nombre.trim()) {
             ErrorManager.show('nombreError', 'El nombre es obligatorio');
             return;
@@ -170,15 +175,129 @@ const PerfilManager = {
             this.perfilData = updatedPerfil;
             this.renderPerfil(updatedPerfil);
 
-            ErrorManager.show('profileSuccessMessage', '¡Perfil actualizado exitosamente!');
+            ToastManager.success('¡Perfil actualizado!', 'Tu nombre ha sido actualizado exitosamente.');
+
             setTimeout(() => {
-                ErrorManager.hide('profileSuccessMessage');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editNameModal'));
                 if (modal) modal.hide();
-            }, 2000);
+            }, 1000);
         } catch (error) {
             console.error('Error al actualizar perfil:', error);
             ErrorManager.show('profileErrorMessage', error.message || 'Ocurrió un error al actualizar el perfil');
+        }
+    },
+
+    // --- Cambiar contraseña ---
+    async handleChangePassword(e) {
+        e.preventDefault();
+
+        // Limpiar errores previos
+        ErrorManager.hide('passwordErrorMessage');
+        ErrorManager.hide('currentPasswordError');
+        ErrorManager.hide('newPasswordError');
+        ErrorManager.hide('confirmNewPasswordError');
+
+        const submitButton = document.querySelector('#changePasswordForm button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+        // Validar con PasswordValidator
+        const validation = PasswordValidator.validatePasswordChange(currentPassword, newPassword, confirmNewPassword);
+
+        if (!validation.isValid) {
+            Object.entries(validation.errors).forEach(([field, message]) => {
+                const errorId = field === 'currentPassword' ? 'currentPasswordError' :
+                    field === 'newPassword' ? 'newPasswordError' : 'confirmNewPasswordError';
+                ErrorManager.show(errorId, message);
+            });
+            return;
+        }
+
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+        submitButton.disabled = true;
+
+        try {
+            console.log('Cambiando contraseña con token:', this.token);
+            const response = await fetch(`${CONFIG.API_BASE_URL}/perfiles/mi-perfil/password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    passwordActual: currentPassword,
+                    nuevaPassword: newPassword
+                })
+            });
+
+            console.log('Status response cambiar contraseña:', response.status);
+
+            if (!response.ok) {
+                const responseText = await response.text();
+                console.error('Respuesta backend cambiar contraseña:', responseText);
+                let errorData;
+                try {
+                    errorData = JSON.parse(responseText);
+                } catch {
+                    errorData = { message: `Error ${response.status}: No se pudo procesar la respuesta` };
+                }
+
+                if (response.status === 401) {
+                    ErrorManager.show('passwordErrorMessage', 'Sesión expirada o token inválido. Por favor, inicia sesión nuevamente.');
+                    setTimeout(() => {
+                        TokenManager.clear();
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return;
+                }
+
+                if (response.status === 400) {
+                    // Contraseña actual incorrecta u otro error de validación
+                    if (errorData.message && errorData.message.includes('incorrecta')) {
+                        ErrorManager.show('currentPasswordError', 'La contraseña actual es incorrecta');
+                    } else if (errorData.validationErrors) {
+                        Object.entries(errorData.validationErrors).forEach(([field, message]) => {
+                            if (field === 'nuevaPassword') {
+                                ErrorManager.show('newPasswordError', message);
+                            } else if (field === 'passwordActual') {
+                                ErrorManager.show('currentPasswordError', message);
+                            } else {
+                                ErrorManager.show('passwordErrorMessage', message);
+                            }
+                        });
+                    } else {
+                        ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
+                    }
+                } else {
+                    ErrorManager.show('passwordErrorMessage', errorData.message || 'Error al cambiar la contraseña');
+                }
+                return;
+            }
+
+            // Éxito
+            const data = await response.json();
+            ToastManager.success('¡Contraseña actualizada!', data.mensaje || 'Tu contraseña ha sido actualizada exitosamente.');
+
+            // Limpiar formulario
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+
+            // Cerrar modal después de 1 segundo
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editPasswordModal'));
+                if (modal) modal.hide();
+            }, 1000);
+
+        } catch (error) {
+            console.error('Error al cambiar contraseña:', error);
+            ErrorManager.show('passwordErrorMessage', 'Ocurrió un error de conexión. Por favor, intenta nuevamente.');
+        } finally {
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
         }
     },
 
@@ -190,7 +309,6 @@ const PerfilManager = {
                 return;
             }
 
-            // Cargar todas las notas del usuario y filtrar por favoritas
             const response = await fetch(`${CONFIG.API_BASE_URL}/notas`, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -204,8 +322,6 @@ const PerfilManager = {
 
             const allNotas = await response.json();
             const favoritasIds = this.perfilData.notasFavoritas;
-
-            // Filtrar solo las notas que están en favoritos
             const notasFavoritas = allNotas.filter(nota => favoritasIds.includes(nota.id));
 
             this.renderFavoritas(notasFavoritas);
@@ -266,7 +382,6 @@ const PerfilManager = {
                 </button>
             `;
 
-            // Agregar el contenido HTML completo para el modal
             const previewEl = noteItem.querySelector('.note-preview');
             if (previewEl) {
                 previewEl.noteContent = nota.contenido || '';
@@ -280,7 +395,6 @@ const PerfilManager = {
     createNotePreview(title, htmlContent) {
         const maxTitleLength = 50;
         const maxPreviewLength = 100;
-
         const plainTextContent = this.stripHtml(htmlContent);
 
         const truncatedTitle = title.length > maxTitleLength
@@ -299,7 +413,6 @@ const PerfilManager = {
         };
     },
 
-    // --- Función para convertir HTML a texto plano ---
     stripHtml(html) {
         const tmp = document.createElement("DIV");
         tmp.innerHTML = html;
@@ -333,6 +446,7 @@ const PerfilManager = {
             }
 
             console.log('Nota agregada a favoritos exitosamente');
+            ToastManager.success('¡Favorito agregado!', 'La nota ha sido marcada como favorita.');
             return true;
         } catch (error) {
             console.error('Error al agregar favorita:', error);
@@ -368,6 +482,7 @@ const PerfilManager = {
             }
 
             console.log('Nota removida de favoritos exitosamente');
+            ToastManager.info('Favorito removido', 'La nota ha sido quitada de favoritos.');
             return true;
         } catch (error) {
             console.error('Error al remover favorita:', error);
@@ -377,5 +492,4 @@ const PerfilManager = {
     }
 };
 
-// Exportar para uso global
 window.PerfilManager = PerfilManager;

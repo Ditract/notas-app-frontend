@@ -37,6 +37,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Modal de cambiar contraseña - Limpiar al cerrar
+    const editPasswordModal = document.getElementById('editPasswordModal');
+    if (editPasswordModal) {
+        editPasswordModal.addEventListener('hidden.bs.modal', () => {
+            console.log('Cerrando modal de cambiar contraseña');
+
+            // Limpiar campos
+            const currentPassword = document.getElementById('currentPassword');
+            const newPassword = document.getElementById('newPassword');
+            const confirmNewPassword = document.getElementById('confirmNewPassword');
+
+            if (currentPassword) currentPassword.value = '';
+            if (newPassword) newPassword.value = '';
+            if (confirmNewPassword) confirmNewPassword.value = '';
+
+            // Limpiar errores
+            ErrorManager.hide('passwordErrorMessage');
+            ErrorManager.hide('currentPasswordError');
+            ErrorManager.hide('newPasswordError');
+            ErrorManager.hide('confirmNewPasswordError');
+        });
+    }
+
     // Manejar remover de favoritos con modal de confirmación
     let noteIdToRemove = null;
 
