@@ -24,6 +24,12 @@ main,
 /* --- Navbar --- */
 .navbar {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.navbar.bg-white {
+    background-color: #ffffff !important;
 }
 
 /* Dropdown de usuario */
