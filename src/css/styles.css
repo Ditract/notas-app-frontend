@@ -1,15 +1,35 @@
 /* styles.css - Estilos base y layout general */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
+/* FIX: Body con flexbox para footer sticky */
+html {
+    height: 100%;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #f8f9fa;
     color: #343a40;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Hacer que el contenido principal ocupe el espacio disponible */
+main,
+.container:not(footer .container):not(nav .container) {
+    flex: 1 0 auto;
 }
 
 /* --- Navbar --- */
 .navbar {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.navbar.bg-white {
+    background-color: #ffffff !important;
 }
 
 /* Dropdown de usuario */
@@ -123,6 +143,7 @@ body {
     background-color: #e9ecef;
     padding: 20px 0;
     margin-top: 4rem;
+    flex-shrink: 0;
 }
 
 .text-danger {
