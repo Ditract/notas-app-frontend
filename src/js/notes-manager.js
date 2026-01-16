@@ -1,12 +1,10 @@
-// notes.js - Manejo de notas con Quill Editor (crear, leer, actualizar, eliminar)
+// notes-manager.js - Lógica principal de gestión de notas (CRUD, favoritos, cache)
 
 const NotesManager = {
     token: null,
-    quill: null,
-    editQuill: null,
     favorites: new Set(),
     currentEditingNoteId: null,
-    notesCache: [], // Cache para almacenar las notas cargadas
+    notesCache: [],
 
     init() {
         this.token = TokenManager.get();
@@ -16,8 +14,7 @@ const NotesManager = {
             return;
         }
 
-        this.initQuillEditor();
-        this.initEditQuillEditor();
+        NotesEditor.init();
         this.initForm();
         this.initEditForm();
         this.initSearch();
@@ -26,6 +23,7 @@ const NotesManager = {
         });
     },
 
+    // --- Gestión de Favoritos ---
     async loadFavorites() {
         try {
             console.log('Cargando perfil con token:', this.token);
@@ -59,98 +57,75 @@ const NotesManager = {
         }
     },
 
-    initQuillEditor() {
-        const toolbarOptions = [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            ['blockquote', 'code-block'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['clean']
-        ];
+    async addToFavorites(noteId) {
+        try {
+            console.log('Agregando nota a favoritos, ID:', noteId);
+            const response = await fetch(`${CONFIG.API_BASE_URL}/perfiles/favoritas/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        this.quill = new Quill('#quill-editor', {
-            theme: 'snow',
-            placeholder: 'Escribe tu nota aquí...',
-            modules: {
-                toolbar: toolbarOptions
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Respuesta backend agregar favorita:', text);
+                if (response.status === 401) {
+                    ErrorManager.show('errorMessage', 'Sesión expirada o token inválido.');
+                    setTimeout(() => {
+                        TokenManager.clear();
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return false;
+                }
+                throw new Error(`Error al agregar favorita (status ${response.status})`);
             }
-        });
 
-        this.quill.on('text-change', () => {
-            const content = this.quill.root.innerHTML;
-            const noteContentEl = document.getElementById('noteContent');
-            if (noteContentEl) noteContentEl.value = content;
-            ErrorManager.hide('contenidoError');
-        });
-    },
-
-    initEditQuillEditor() {
-        const toolbarOptions = [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            ['blockquote', 'code-block'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['clean']
-        ];
-
-        this.editQuill = new Quill('#edit-quill-editor', {
-            theme: 'snow',
-            placeholder: 'Edita tu nota aquí...',
-            modules: {
-                toolbar: toolbarOptions
-            }
-        });
-
-        this.editQuill.on('text-change', () => {
-            const content = this.editQuill.root.innerHTML;
-            const editNoteContentEl = document.getElementById('editNoteContent');
-            if (editNoteContentEl) editNoteContentEl.value = content;
-            ErrorManager.hide('editContenidoError');
-        });
-    },
-
-    clearEditor() {
-        if (this.quill) {
-            this.quill.setContents([]);
-            const noteContentEl = document.getElementById('noteContent');
-            if (noteContentEl) noteContentEl.value = '';
+            console.log('Nota agregada a favoritos exitosamente');
+            return true;
+        } catch (error) {
+            console.error('Error al agregar favorita:', error);
+            ErrorManager.show('errorMessage', error.message);
+            return false;
         }
     },
 
-    clearEditEditor() {
-        if (this.editQuill) {
-            this.editQuill.setContents([]);
-            const editNoteContentEl = document.getElementById('editNoteContent');
-            if (editNoteContentEl) editNoteContentEl.value = '';
+    async removeFromFavorites(noteId) {
+        try {
+            console.log('Quitando nota de favoritos, ID:', noteId);
+            const response = await fetch(`${CONFIG.API_BASE_URL}/perfiles/favoritas/${noteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Respuesta backend quitar favorita:', text);
+                if (response.status === 401) {
+                    ErrorManager.show('errorMessage', 'Sesión expirada o token inválido.');
+                    setTimeout(() => {
+                        TokenManager.clear();
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return false;
+                }
+                throw new Error(`Error al quitar favorita (status ${response.status})`);
+            }
+
+            console.log('Nota quitada de favoritos exitosamente');
+            return true;
+        } catch (error) {
+            console.error('Error al quitar favorita:', error);
+            ErrorManager.show('errorMessage', error.message);
+            return false;
         }
     },
 
-    getEditorTextContent() {
-        return this.quill ? this.quill.getText().trim() : '';
-    },
-
-    getEditorHtmlContent() {
-        return this.quill ? this.quill.root.innerHTML : '';
-    },
-
-    getEditEditorTextContent() {
-        return this.editQuill ? this.editQuill.getText().trim() : '';
-    },
-
-    getEditEditorHtmlContent() {
-        return this.editQuill ? this.editQuill.root.innerHTML : '';
-    },
-
-    stripHtml(html) {
-        const tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    },
-
+    // --- CRUD de Notas ---
     async loadNotes() {
         try {
             console.log('Enviando petición a /api/notas con token:', this.token);
@@ -178,7 +153,7 @@ const NotesManager = {
             }
 
             const notes = await response.json();
-            this.notesCache = notes; // Guardar en cache
+            this.notesCache = notes;
             this.renderNotes(notes);
         } catch (error) {
             console.error('Error al cargar notas:', error);
@@ -293,6 +268,12 @@ const NotesManager = {
         };
     },
 
+    stripHtml(html) {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    },
+
     initForm() {
         const noteForm = document.getElementById('noteForm');
         if (noteForm) {
@@ -315,31 +296,10 @@ const NotesManager = {
 
         const titleEl = document.getElementById('noteTitle');
         const title = titleEl ? titleEl.value : '';
-        const htmlContent = this.getEditorHtmlContent();
-        const textContent = this.getEditorTextContent();
+        const htmlContent = NotesEditor.getEditorHtmlContent();
+        const textContent = NotesEditor.getEditorTextContent();
 
-        const validation = Validators.validateForm({
-            titulo: {
-                value: title,
-                rules: [
-                    { test: (val) => val.trim() !== '', message: 'El título es obligatorio' },
-                    {
-                        test: (val) => val.trim().length <= CONFIG.VALIDATION.TITLE_MAX_LENGTH,
-                        message: `El título no puede exceder ${CONFIG.VALIDATION.TITLE_MAX_LENGTH} caracteres`
-                    }
-                ]
-            },
-            contenido: {
-                value: textContent,
-                rules: [
-                    { test: (val) => val.trim() !== '', message: 'El contenido es obligatorio' },
-                    {
-                        test: (val) => val.trim().length <= CONFIG.VALIDATION.CONTENT_MAX_LENGTH,
-                        message: `El contenido no puede exceder ${CONFIG.VALIDATION.CONTENT_MAX_LENGTH} caracteres`
-                    }
-                ]
-            }
-        });
+        const validation = NotesValidation.validateNote(title, textContent);
 
         if (!validation.isValid) {
             Object.entries(validation.errors).forEach(([field, message]) => {
@@ -397,7 +357,7 @@ const NotesManager = {
 
             const titleInput = document.getElementById('noteTitle');
             if (titleInput) titleInput.value = '';
-            this.clearEditor();
+            NotesEditor.clearEditor();
             this.loadNotes();
         } catch (error) {
             console.error('Error al agregar nota:', error);
@@ -413,31 +373,10 @@ const NotesManager = {
 
         const titleEl = document.getElementById('editNoteTitle');
         const title = titleEl ? titleEl.value : '';
-        const htmlContent = this.getEditEditorHtmlContent();
-        const textContent = this.getEditEditorTextContent();
+        const htmlContent = NotesEditor.getEditEditorHtmlContent();
+        const textContent = NotesEditor.getEditEditorTextContent();
 
-        const validation = Validators.validateForm({
-            titulo: {
-                value: title,
-                rules: [
-                    { test: (val) => val.trim() !== '', message: 'El título es obligatorio' },
-                    {
-                        test: (val) => val.trim().length <= CONFIG.VALIDATION.TITLE_MAX_LENGTH,
-                        message: `El título no puede exceder ${CONFIG.VALIDATION.TITLE_MAX_LENGTH} caracteres`
-                    }
-                ]
-            },
-            contenido: {
-                value: textContent,
-                rules: [
-                    { test: (val) => val.trim() !== '', message: 'El contenido es obligatorio' },
-                    {
-                        test: (val) => val.trim().length <= CONFIG.VALIDATION.CONTENT_MAX_LENGTH,
-                        message: `El contenido no puede exceder ${CONFIG.VALIDATION.CONTENT_MAX_LENGTH} caracteres`
-                    }
-                ]
-            }
-        });
+        const validation = NotesValidation.validateNote(title, textContent);
 
         if (!validation.isValid) {
             Object.entries(validation.errors).forEach(([field, message]) => {
@@ -532,74 +471,6 @@ const NotesManager = {
             return true;
         } catch (error) {
             console.error('Error al eliminar nota:', error);
-            ErrorManager.show('errorMessage', error.message);
-            return false;
-        }
-    },
-
-    async addToFavorites(noteId) {
-        try {
-            console.log('Agregando nota a favoritos, ID:', noteId);
-            const response = await fetch(`${CONFIG.API_BASE_URL}/perfiles/favoritas/${noteId}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const text = await response.text();
-                console.error('Respuesta backend agregar favorita:', text);
-                if (response.status === 401) {
-                    ErrorManager.show('errorMessage', 'Sesión expirada o token inválido.');
-                    setTimeout(() => {
-                        TokenManager.clear();
-                        window.location.href = 'login.html';
-                    }, 2000);
-                    return false;
-                }
-                throw new Error(`Error al agregar favorita (status ${response.status})`);
-            }
-
-            console.log('Nota agregada a favoritos exitosamente');
-            return true;
-        } catch (error) {
-            console.error('Error al agregar favorita:', error);
-            ErrorManager.show('errorMessage', error.message);
-            return false;
-        }
-    },
-
-    async removeFromFavorites(noteId) {
-        try {
-            console.log('Quitando nota de favoritos, ID:', noteId);
-            const response = await fetch(`${CONFIG.API_BASE_URL}/perfiles/favoritas/${noteId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const text = await response.text();
-                console.error('Respuesta backend quitar favorita:', text);
-                if (response.status === 401) {
-                    ErrorManager.show('errorMessage', 'Sesión expirada o token inválido.');
-                    setTimeout(() => {
-                        TokenManager.clear();
-                        window.location.href = 'login.html';
-                    }, 2000);
-                    return false;
-                }
-                throw new Error(`Error al quitar favorita (status ${response.status})`);
-            }
-
-            console.log('Nota quitada de favoritos exitosamente');
-            return true;
-        } catch (error) {
-            console.error('Error al quitar favorita:', error);
             ErrorManager.show('errorMessage', error.message);
             return false;
         }

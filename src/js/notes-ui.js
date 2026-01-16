@@ -1,4 +1,4 @@
-// notes-ui.js
+// notes-ui.js - Manejo de eventos de UI para notas
 document.addEventListener('DOMContentLoaded', () => {
     // Modal para ver nota completa
     const noteModal = document.getElementById('noteModal');
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (editNoteTitleInput) {
                 editNoteTitleInput.value = '';
             }
-            NotesManager.clearEditEditor();
+            NotesEditor.clearEditEditor();
             ErrorManager.hide('editErrorMessage');
             ErrorManager.hide('editTituloError');
             ErrorManager.hide('editContenidoError');
@@ -118,10 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const noteId = editButton.getAttribute('data-note-id');
                     console.log('Editar nota ID:', noteId);
 
-                    // Guardar el ID antes de abrir el modal
                     NotesManager.currentEditingNoteId = noteId;
-
-                    // Obtener la nota del cache y cargar los datos
                     const note = NotesManager.getNoteById(noteId);
 
                     console.log('Nota completa del cache:', note);
@@ -133,9 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log('Título cargado:', note.titulo);
                         }
 
-                        if (NotesManager.editQuill && note.contenido) {
-                            const delta = NotesManager.editQuill.clipboard.convert(note.contenido);
-                            NotesManager.editQuill.setContents(delta);
+                        if (note.contenido) {
+                            NotesEditor.loadContentIntoEditEditor(note.contenido);
                             console.log('Contenido cargado en el editor de edición');
                         }
                     }
