@@ -6,10 +6,10 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="mb-4 text-5xl text-[var(--color-on-surface-muted)]">{{ icon() }}</div>
-      <h3 class="mb-2 text-lg font-semibold text-[var(--color-on-surface)]">{{ title() }}</h3>
+      <div class="mb-4 text-5xl">{{ icon() }}</div>
+      <h3 class="mb-2 text-lg font-semibold" style="color: var(--text-primary)">{{ title() }}</h3>
       @if (message()) {
-        <p class="max-w-md text-sm text-[var(--color-on-surface-muted)]">{{ message() }}</p>
+        <p class="max-w-md text-sm" style="color: var(--text-muted)">{{ message() }}</p>
       }
       <div class="mt-6">
         <ng-content />

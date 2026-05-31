@@ -19,10 +19,12 @@ export class ProfileFacade {
   private readonly _loading = signal(false);
   private readonly _editingName = signal(false);
   private readonly _editingPassword = signal(false);
+  private readonly _viewingNote = signal<Nota | null>(null);
 
   readonly perfil = computed(() => this._perfil());
   readonly favoriteNotes = computed(() => this._favoriteNotes());
   readonly loading = computed(() => this._loading());
+  readonly viewingNote = computed(() => this._viewingNote());
   readonly editingName = computed(() => this._editingName());
   readonly editingPassword = computed(() => this._editingPassword());
   readonly userEmail = computed(() => this.authFacade.currentUser()?.email ?? '');
@@ -113,5 +115,13 @@ export class ProfileFacade {
 
   closeEditPassword(): void {
     this._editingPassword.set(false);
+  }
+
+  viewNote(note: Nota): void {
+    this._viewingNote.set(note);
+  }
+
+  closeViewer(): void {
+    this._viewingNote.set(null);
   }
 }

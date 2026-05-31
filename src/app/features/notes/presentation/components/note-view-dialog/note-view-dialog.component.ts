@@ -7,26 +7,26 @@ import { SanitizeHtmlPipe } from '../../../../../shared/pipes/sanitize-html.pipe
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SanitizeHtmlPipe],
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="close.emit()">
+    <div class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.5)" (click)="close.emit()">
       <div
-        class="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-lg)]"
+        class="card w-full max-w-2xl max-h-[80vh] overflow-y-auto"
         (click)="$event.stopPropagation()"
         role="dialog"
         aria-label="Ver nota"
         aria-modal="true"
       >
-        <div class="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
-          <h2 class="text-lg font-semibold text-[var(--color-on-surface)]">{{ note()?.titulo }}</h2>
+        <div class="flex items-center justify-between border-b px-6 py-4" style="border-color: var(--border-color)">
+          <h2 class="text-lg font-semibold" style="color: var(--text-primary)">{{ note()?.titulo }}</h2>
           <button
             (click)="close.emit()"
-            class="rounded-[var(--radius-sm)] p-1 text-[var(--color-on-surface-muted)] hover:bg-[var(--color-surface-alt)] transition-colors"
+            class="btn btn-ghost btn-sm"
             aria-label="Cerrar"
           >
             ✕
           </button>
         </div>
 
-        <div class="prose prose-sm max-w-none p-6 text-[var(--color-on-surface)]" [innerHTML]="note()?.contenido | sanitizeHtml"></div>
+        <div class="prose prose-sm max-w-none p-6" style="color: var(--text-primary)" [innerHTML]="note()?.contenido | sanitizeHtml"></div>
       </div>
     </div>
   `,

@@ -5,6 +5,7 @@ import { AuthFacade } from '../../../../core/auth/application/auth.facade';
 import { NotePreviewPipe } from '../../../../shared/pipes/note-preview.pipe';
 import { SpinnerComponent } from '../../../../shared/ui/spinner.component';
 import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component';
+import { NoteViewDialogComponent } from '../../../notes/presentation/components/note-view-dialog/note-view-dialog.component';
 import { passwordValidator } from '../../../../shared/validators/validators';
 
 @Component({
@@ -16,62 +17,52 @@ import { passwordValidator } from '../../../../shared/validators/validators';
     NotePreviewPipe,
     SpinnerComponent,
     EmptyStateComponent,
+    NoteViewDialogComponent,
   ],
   template: `
     <div class="space-y-6">
       @if (facade.loading()) {
         <app-spinner />
       } @else {
-        <!-- Profile header -->
-        <div class="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-sm)]">
-          <div class="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary-100)] text-2xl font-bold text-[var(--color-primary-700)]">
+        <div class="card p-6">
+          <div class="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-2xl font-bold" style="background-color: var(--accent-light); color: var(--accent)">
               {{ userInitial() }}
             </div>
-            <div class="text-center sm:text-left">
-              <h1 class="text-xl font-bold text-[var(--color-on-surface)]">{{ facade.perfil()?.nombre ?? 'Usuario' }}</h1>
-              <p class="text-sm text-[var(--color-on-surface-muted)]">{{ facade.userEmail() }}</p>
-              <div class="mt-2 flex items-center gap-4 text-sm text-[var(--color-on-surface-muted)]">
+            <div class="text-center sm:text-left flex-1">
+              <h1 class="text-xl font-bold" style="color: var(--text-primary)">{{ facade.perfil()?.nombre ?? 'Usuario' }}</h1>
+              <p class="text-sm" style="color: var(--text-muted)">{{ facade.userEmail() }}</p>
+              <div class="mt-2 flex items-center gap-4 text-sm" style="color: var(--text-muted)">
                 <span>⭐ {{ facade.favoritesCount() }} favoritas</span>
               </div>
             </div>
-            <div class="flex gap-2 sm:ml-auto">
-              <button
-                (click)="showEditName = true"
-                class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors"
-              >
-                Editar nombre
-              </button>
-              <button
-                (click)="showChangePassword = true"
-                class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors"
-              >
-                Cambiar contraseña
-              </button>
+            <div class="flex shrink-0 gap-2">
+              <button (click)="showEditName = true" class="btn btn-secondary btn-sm">Editar nombre</button>
+              <button (click)="showChangePassword = true" class="btn btn-secondary btn-sm">Cambiar contraseña</button>
             </div>
           </div>
         </div>
 
-        <!-- Favorites section -->
         <div>
-          <h2 class="mb-4 text-lg font-semibold text-[var(--color-on-surface)]">Notas favoritas</h2>
+          <h2 class="mb-4 text-lg font-semibold" style="color: var(--text-primary)">Notas favoritas</h2>
 
           @if (facade.favoriteNotes().length === 0) {
-            <app-empty-state
-              icon="⭐"
-              title="Sin notas favoritas"
-              message="Marca tus notas favoritas desde el dashboard."
-            />
+            <app-empty-state icon="⭐" title="Sin notas favoritas" message="Marca tus notas favoritas desde el dashboard." />
           } @else {
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               @for (note of facade.favoriteNotes(); track note.id) {
-                <div class="group flex flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] transition-shadow hover:shadow-[var(--shadow-md)]">
-                  <h3 class="mb-1 line-clamp-1 text-base font-semibold text-[var(--color-on-surface)]">{{ note.titulo }}</h3>
-                  <p class="mb-4 flex-1 line-clamp-3 text-sm text-[var(--color-on-surface-muted)]">{{ note.contenido | notePreview:120 }}</p>
-                  <div class="flex items-center gap-2 border-t border-[var(--color-border)] pt-3">
+                <div class="card note-card-hover cursor-pointer overflow-hidden p-0" (click)="facade.viewNote(note)">
+                  <div class="p-5">
+                    <div class="mb-3 flex items-start justify-between gap-2">
+                      <h3 class="line-clamp-1 text-base font-semibold" style="color: var(--text-primary)">{{ note.titulo }}</h3>
+                      <span class="shrink-0 text-sm" title="Favorita">⭐</span>
+                    </div>
+                    <p class="line-clamp-3 text-sm leading-relaxed" style="color: var(--text-secondary)">{{ note.contenido | notePreview:180 }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 border-t px-4 py-2.5" style="border-color: var(--border-color); background-color: var(--bg-secondary)">
                     <button
-                      (click)="facade.removeFavorite(note.id)"
-                      class="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] transition-colors"
+                      (click)="onRemoveFavorite($event, note.id)"
+                      class="card-action card-action--delete"
                     >
                       Quitar de favoritos
                     </button>
@@ -83,128 +74,113 @@ import { passwordValidator } from '../../../../shared/validators/validators';
         </div>
       }
 
-      <!-- Edit Name Dialog -->
+      @if (facade.viewingNote(); as viewNote) {
+        <app-note-view-dialog
+          [note]="viewNote"
+          (close)="facade.closeViewer()"
+        />
+      }
+
       @if (showEditName) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="showEditName = false">
-          <div
-            class="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-lg)]"
-            (click)="$event.stopPropagation()"
-            role="dialog"
-            aria-label="Editar nombre"
-            aria-modal="true"
-          >
-            <div class="mb-4 flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-[var(--color-on-surface)]">Editar nombre</h2>
-              <button (click)="showEditName = false" class="rounded-[var(--radius-sm)] p-1 text-[var(--color-on-surface-muted)] hover:bg-[var(--color-surface-alt)] transition-colors" aria-label="Cerrar">✕</button>
+        <div class="fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.5)" (click)="showEditName = false">
+          <div class="card w-full max-w-md p-6" (click)="$event.stopPropagation()" role="dialog" aria-label="Editar nombre" aria-modal="true">
+            <div class="mb-5 flex items-center justify-between">
+              <h2 class="text-lg font-bold" style="color: var(--text-primary)">Editar nombre</h2>
+              <button (click)="showEditName = false" class="btn btn-ghost btn-sm" aria-label="Cerrar">✕</button>
             </div>
 
-            <form [formGroup]="nameForm" (ngSubmit)="onUpdateName()" class="space-y-4">
+            <form [formGroup]="nameForm" (ngSubmit)="onUpdateName()" class="space-y-5">
               <div>
-                <label for="nombre" class="mb-1.5 block text-sm font-medium text-[var(--color-on-surface)]">
-                  Nombre <span class="text-[var(--color-danger)]">*</span>
+                <label for="perfil-nombre" class="mb-1.5 block text-sm font-medium" style="color: var(--text-primary)">
+                  Nombre <span style="color: var(--danger)">*</span>
                 </label>
                 <input
-                  id="nombre"
+                  id="perfil-nombre"
                   type="text"
                   formControlName="nombre"
                   placeholder="Tu nombre"
                   minlength="3"
                   maxlength="40"
-                  class="block w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
-                  [class.border-[var(--color-danger)]]="nameForm.get('nombre')?.invalid && nameForm.get('nombre')?.touched"
+                  class="input-field"
+                  [class.error]="nameForm.get('nombre')?.invalid && nameForm.get('nombre')?.touched"
                 />
                 @if (nameForm.get('nombre')?.invalid && nameForm.get('nombre')?.touched) {
-                  <p class="mt-1 text-sm text-[var(--color-danger)]">El nombre debe tener entre 3 y 40 caracteres</p>
+                  <p class="mt-1 text-sm" style="color: var(--danger)">El nombre debe tener entre 3 y 40 caracteres</p>
                 }
               </div>
 
               <div class="flex justify-end gap-3">
-                <button type="button" (click)="showEditName = false" class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" [disabled]="nameForm.invalid" class="rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] disabled:opacity-50 transition-colors">
-                  Guardar
-                </button>
+                <button type="button" (click)="showEditName = false" class="btn btn-secondary btn-md">Cancelar</button>
+                <button type="submit" [disabled]="nameForm.invalid" class="btn btn-primary btn-md">Guardar</button>
               </div>
             </form>
           </div>
         </div>
       }
 
-      <!-- Change Password Dialog -->
       @if (showChangePassword) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="showChangePassword = false">
-          <div
-            class="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-lg)]"
-            (click)="$event.stopPropagation()"
-            role="dialog"
-            aria-label="Cambiar contraseña"
-            aria-modal="true"
-          >
-            <div class="mb-4 flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-[var(--color-on-surface)]">Cambiar contraseña</h2>
-              <button (click)="showChangePassword = false" class="rounded-[var(--radius-sm)] p-1 text-[var(--color-on-surface-muted)] hover:bg-[var(--color-surface-alt)] transition-colors" aria-label="Cerrar">✕</button>
+        <div class="fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.5)" (click)="showChangePassword = false">
+          <div class="card w-full max-w-md p-6" (click)="$event.stopPropagation()" role="dialog" aria-label="Cambiar contraseña" aria-modal="true">
+            <div class="mb-5 flex items-center justify-between">
+              <h2 class="text-lg font-bold" style="color: var(--text-primary)">Cambiar contraseña</h2>
+              <button (click)="showChangePassword = false" class="btn btn-ghost btn-sm" aria-label="Cerrar">✕</button>
             </div>
 
-            <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-4">
+            <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-5">
               <div>
-                <label for="currentPassword" class="mb-1.5 block text-sm font-medium text-[var(--color-on-surface)]">
-                  Contraseña actual <span class="text-[var(--color-danger)]">*</span>
+                <label for="pw-current" class="mb-1.5 block text-sm font-medium" style="color: var(--text-primary)">
+                  Contraseña actual <span style="color: var(--danger)">*</span>
                 </label>
                 <input
-                  id="currentPassword"
+                  id="pw-current"
                   type="password"
                   formControlName="passwordActual"
                   placeholder="Tu contraseña actual"
-                  class="block w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
+                  class="input-field"
                   autocomplete="current-password"
                 />
                 @if (passwordForm.get('passwordActual')?.invalid && passwordForm.get('passwordActual')?.touched) {
-                  <p class="mt-1 text-sm text-[var(--color-danger)]">La contraseña actual es obligatoria</p>
+                  <p class="mt-1 text-sm" style="color: var(--danger)">La contraseña actual es obligatoria</p>
                 }
               </div>
 
               <div>
-                <label for="newPassword" class="mb-1.5 block text-sm font-medium text-[var(--color-on-surface)]">
-                  Nueva contraseña <span class="text-[var(--color-danger)]">*</span>
+                <label for="pw-new" class="mb-1.5 block text-sm font-medium" style="color: var(--text-primary)">
+                  Nueva contraseña <span style="color: var(--danger)">*</span>
                 </label>
                 <input
-                  id="newPassword"
+                  id="pw-new"
                   type="password"
                   formControlName="nuevaPassword"
                   placeholder="Mínimo 8 caracteres"
-                  class="block w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
+                  class="input-field"
                   autocomplete="new-password"
                 />
                 @if (passwordForm.get('nuevaPassword')?.invalid && passwordForm.get('nuevaPassword')?.touched) {
-                  <p class="mt-1 text-sm text-[var(--color-danger)]">Debe incluir mayúscula, minúscula, número y carácter especial (8-64 chars)</p>
+                  <p class="mt-1 text-sm" style="color: var(--danger)">Debe incluir mayúscula, minúscula, número y carácter especial (8-64 chars)</p>
                 }
               </div>
 
               <div>
-                <label for="confirmPassword" class="mb-1.5 block text-sm font-medium text-[var(--color-on-surface)]">
-                  Confirmar contraseña <span class="text-[var(--color-danger)]">*</span>
+                <label for="pw-confirm" class="mb-1.5 block text-sm font-medium" style="color: var(--text-primary)">
+                  Confirmar contraseña <span style="color: var(--danger)">*</span>
                 </label>
                 <input
-                  id="confirmPassword"
+                  id="pw-confirm"
                   type="password"
                   formControlName="confirmPassword"
                   placeholder="Repite tu nueva contraseña"
-                  class="block w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
+                  class="input-field"
                   autocomplete="new-password"
                 />
                 @if (passwordForm.errors?.['passwordMismatch'] && passwordForm.get('confirmPassword')?.touched) {
-                  <p class="mt-1 text-sm text-[var(--color-danger)]">Las contraseñas no coinciden</p>
+                  <p class="mt-1 text-sm" style="color: var(--danger)">Las contraseñas no coinciden</p>
                 }
               </div>
 
               <div class="flex justify-end gap-3">
-                <button type="button" (click)="showChangePassword = false" class="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" [disabled]="passwordForm.invalid" class="rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] disabled:opacity-50 transition-colors">
-                  Cambiar contraseña
-                </button>
+                <button type="button" (click)="showChangePassword = false" class="btn btn-secondary btn-md">Cancelar</button>
+                <button type="submit" [disabled]="passwordForm.invalid" class="btn btn-primary btn-md">Cambiar contraseña</button>
               </div>
             </form>
           </div>
@@ -258,6 +234,11 @@ export class ProfilePageComponent implements OnInit {
     );
     this.showChangePassword = false;
     this.passwordForm.reset();
+  }
+
+  onRemoveFavorite(event: Event, noteId: number): void {
+    event.stopPropagation();
+    this.facade.removeFavorite(noteId);
   }
 
   private passwordMatchValidator(group: import('@angular/forms').AbstractControl): import('@angular/forms').ValidationErrors | null {

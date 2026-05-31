@@ -5,18 +5,18 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="cancel.emit()">
+    <div class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.5)" (click)="cancel.emit()">
       <div
-        class="w-full max-w-sm rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-lg)]"
+        class="card w-full max-w-sm p-6"
         (click)="$event.stopPropagation()"
         role="alertdialog"
         aria-label="Confirmar eliminación"
         aria-modal="true"
       >
-        <div class="mb-4 text-center">
+        <div class="mb-5 text-center">
           <div class="mb-3 text-4xl">🗑️</div>
-          <h2 class="text-lg font-semibold text-[var(--color-on-surface)]">¿Eliminar nota?</h2>
-          <p class="mt-1 text-sm text-[var(--color-on-surface-muted)]">
+          <h2 class="text-lg font-bold" style="color: var(--text-primary)">¿Eliminar nota?</h2>
+          <p class="mt-1 text-sm" style="color: var(--text-muted)">
             Esta acción no se puede deshacer.
           </p>
         </div>
@@ -24,13 +24,13 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
         <div class="flex gap-3">
           <button
             (click)="cancel.emit()"
-            class="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors"
+            class="btn btn-secondary btn-md flex-1"
           >
             Cancelar
           </button>
           <button
             (click)="confirm.emit()"
-            class="flex-1 rounded-[var(--radius-md)] bg-[var(--color-danger)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+            class="btn btn-danger btn-md flex-1"
           >
             Eliminar
           </button>

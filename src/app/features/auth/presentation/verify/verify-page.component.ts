@@ -10,29 +10,25 @@ import { emailValidator } from '../../../../shared/validators/validators';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, RouterLink],
   template: `
-    <div class="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+    <div class="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8">
       <div class="w-full max-w-md">
-        <div class="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8 shadow-[var(--shadow-md)]">
-
+        <div class="card p-8">
           @if (facade.verifyState() === 'loading') {
             <div class="py-12 text-center">
-              <div class="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-primary-200)] border-t-[var(--color-primary-600)]"></div>
-              <p class="text-sm text-[var(--color-on-surface-muted)]">Verificando tu cuenta...</p>
+              <div class="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" style="border-color: var(--border-color); border-top-color: var(--accent)"></div>
+              <p class="text-sm" style="color: var(--text-muted)">Verificando tu cuenta...</p>
             </div>
           }
 
           @else if (facade.verifyState() === 'success') {
             <div class="py-8 text-center">
               <div class="mb-4 text-5xl">✅</div>
-              <h2 class="mb-2 text-xl font-bold text-[var(--color-on-surface)]">¡Cuenta verificada!</h2>
-              <p class="text-sm text-[var(--color-on-surface-muted)]">
+              <h2 class="mb-2 text-xl font-bold" style="color: var(--text-primary)">¡Cuenta verificada!</h2>
+              <p class="text-sm" style="color: var(--text-muted)">
                 Tu cuenta ha sido verificada exitosamente. Ya puedes iniciar sesión.
               </p>
               <div class="mt-6">
-                <a routerLink="/login"
-                  class="inline-block rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] transition-colors">
-                  Ir a iniciar sesión
-                </a>
+                <a routerLink="/login" class="btn btn-primary btn-md no-underline">Ir a iniciar sesión</a>
               </div>
             </div>
           }
@@ -40,61 +36,44 @@ import { emailValidator } from '../../../../shared/validators/validators';
           @else if (facade.verifyState() === 'error') {
             <div class="py-8 text-center">
               <div class="mb-4 text-5xl">❌</div>
-              <h2 class="mb-2 text-xl font-bold text-[var(--color-on-surface)]">Error de verificación</h2>
-              <p class="text-sm text-[var(--color-danger)]">{{ facade.verifyError() }}</p>
+              <h2 class="mb-2 text-xl font-bold" style="color: var(--text-primary)">Error de verificación</h2>
+              <p class="text-sm" style="color: var(--danger)">{{ facade.verifyError() }}</p>
 
               @if (!showResendForm) {
                 <div class="mt-6 space-y-3">
-                  <button
-                    (click)="showResendForm = true"
-                    class="block w-full rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] transition-colors"
-                  >
-                    Reenviar email de verificación
-                  </button>
-                  <a routerLink="/login" class="block text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium transition-colors">
-                    Ir a iniciar sesión
-                  </a>
+                  <button (click)="showResendForm = true" class="btn btn-primary btn-md w-full">Reenviar email de verificación</button>
+                  <a routerLink="/login" class="btn btn-secondary btn-md w-full no-underline inline-flex justify-center">Ir a iniciar sesión</a>
                 </div>
               }
 
               @if (showResendForm) {
-                <div class="mt-6 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-alt)] p-4 text-left">
-                  <h3 class="mb-3 text-sm font-semibold text-[var(--color-on-surface)]">Reenviar verificación</h3>
+                <div class="mt-6 card p-4 text-left" style="background: var(--bg-secondary)">
+                  <h3 class="mb-3 text-sm font-semibold" style="color: var(--text-primary)">Reenviar verificación</h3>
 
                   @if (facade.resendState() === 'success') {
-                    <p class="text-sm text-[var(--color-success)]">Email de verificación enviado. Revisa tu correo.</p>
+                    <p class="text-sm" style="color: var(--success)">Email de verificación enviado. Revisa tu correo.</p>
                   } @else {
                     <form [formGroup]="resendForm" (ngSubmit)="onResend()" class="space-y-3">
                       @if (facade.resendError()) {
-                        <p class="text-sm text-[var(--color-danger)]">{{ facade.resendError() }}</p>
+                        <p class="text-sm" style="color: var(--danger)">{{ facade.resendError() }}</p>
                       }
                       <div>
                         <input
                           type="email"
                           formControlName="email"
                           placeholder="tu@email.com"
-                          class="block w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
+                          class="input-field"
                         />
                       </div>
                       <div class="flex gap-2">
-                        <button
-                          type="submit"
-                          [disabled]="facade.resendState() === 'loading'"
-                          class="flex-1 rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] disabled:opacity-50 transition-colors"
-                        >
+                        <button type="submit" [disabled]="facade.resendState() === 'loading'" class="btn btn-primary btn-sm flex-1">
                           @if (facade.resendState() === 'loading') {
                             Enviando...
                           } @else {
                             Enviar
                           }
                         </button>
-                        <button
-                          type="button"
-                          (click)="showResendForm = false"
-                          class="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors"
-                        >
-                          Volver
-                        </button>
+                        <button type="button" (click)="showResendForm = false" class="btn btn-secondary btn-sm">Volver</button>
                       </div>
                     </form>
                   }

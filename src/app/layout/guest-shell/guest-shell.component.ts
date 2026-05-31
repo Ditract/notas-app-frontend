@@ -1,28 +1,29 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-guest-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink],
   template: `
-    <nav class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-md">
-      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-[var(--spacing-page-x)]">
-        <a routerLink="/" class="text-xl font-bold text-[var(--color-primary-600)]">
-          NotasAPP
+    <nav style="background: var(--bg); border-bottom: 1px solid var(--border-color)" class="sticky top-0 z-40">
+      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <a routerLink="/" class="inline-flex items-center gap-2 no-underline" style="color: var(--accent)">
+          <span class="text-xl">📝</span>
+          <span class="text-lg font-bold" style="color: var(--text-primary)">NotasAPP</span>
         </a>
 
         <div class="flex items-center gap-3">
           <a
             routerLink="/login"
-            class="rounded-lg px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-alt)] transition-colors"
+            class="btn btn-ghost btn-sm no-underline"
           >
             Iniciar sesión
           </a>
           <a
             routerLink="/register"
-            class="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] transition-colors"
+            class="btn btn-primary btn-sm no-underline"
           >
             Registrarse
           </a>

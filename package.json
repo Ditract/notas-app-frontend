@@ -1,5 +1,5 @@
 {
-  "name": "migration-angular",
+  "name": "notas-app",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -22,7 +22,6 @@
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@fontsource/poppins": "^5.2.7",
-    "@tailwindcss/browser": "^4.3.0",
     "@tiptap/core": "^3.23.6",
     "@tiptap/extension-character-count": "^3.23.6",
     "@tiptap/extension-color": "^3.23.6",

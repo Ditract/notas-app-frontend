@@ -1,4 +1,4 @@
-import { Component, input, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-input',
@@ -9,11 +9,12 @@ import { Component, input, signal, effect, ChangeDetectionStrategy } from '@angu
       @if (label()) {
         <label
           [for]="inputId()"
-          class="block text-sm font-medium text-[var(--color-on-surface)]"
+          class="block text-sm font-medium"
+          style="color: var(--text-primary)"
         >
           {{ label() }}
           @if (required()) {
-            <span class="text-[var(--color-danger)]">*</span>
+            <span style="color: var(--danger)">*</span>
           }
         </label>
       }
@@ -21,31 +22,38 @@ import { Component, input, signal, effect, ChangeDetectionStrategy } from '@angu
       <div class="relative">
         <input
           [id]="inputId()"
-          [type]="type()"
+          [type]="type() === 'password' && showPassword() ? 'text' : type()"
           [placeholder]="placeholder()"
           [disabled]="disabled()"
           [value]="value()"
           (input)="onInput($event)"
           (blur)="onBlur()"
-          [class]="inputClass()"
+          class="input-field"
+          [class.error]="!!error()"
+          [class.pr-10]="type() === 'password'"
         />
         @if (type() === 'password') {
           <button
             type="button"
             (click)="togglePasswordVisibility()"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-on-surface-muted)] hover:text-[var(--color-on-surface)]"
+            class="absolute right-3 top-1/2 -translate-y-1/2"
+            style="color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px"
             [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
           >
-            {{ showPassword() ? '🙈' : '👁️' }}
+            @if (showPassword()) {
+              <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            } @else {
+              <svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            }
           </button>
         }
       </div>
 
       @if (error()) {
-        <p class="text-sm text-[var(--color-danger)]">{{ error() }}</p>
+        <p class="text-sm" style="color: var(--danger)">{{ error() }}</p>
       }
       @if (hint() && !error()) {
-        <p class="text-sm text-[var(--color-on-surface-muted)]">{{ hint() }}</p>
+        <p class="text-sm" style="color: var(--text-muted)">{{ hint() }}</p>
       }
     </div>
   `,
@@ -69,23 +77,6 @@ export class InputComponent {
 
   togglePasswordVisibility(): void {
     this.showPassword.update((v) => !v);
-  }
-
-  currentType(): string {
-    if (this.type() === 'password') {
-      return this.showPassword() ? 'text' : 'password';
-    }
-    return this.type();
-  }
-
-  inputClass(): string {
-    const base =
-      'block w-full rounded-[var(--radius-md)] border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
-
-    if (this.error()) {
-      return `${base} border-[var(--color-danger)] focus:ring-[var(--color-danger)]`;
-    }
-    return `${base} border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] focus:ring-[var(--color-primary-500)]`;
   }
 
   onInput(event: Event): void {

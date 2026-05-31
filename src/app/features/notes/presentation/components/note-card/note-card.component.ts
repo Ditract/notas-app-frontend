@@ -8,44 +8,42 @@ import { NotePreviewPipe } from '../../../../../shared/pipes/note-preview.pipe';
   imports: [NotePreviewPipe],
   template: `
     <div
-      class="group flex cursor-pointer flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] transition-shadow hover:shadow-[var(--shadow-md)]"
+      class="card note-card-hover cursor-pointer overflow-hidden p-0"
       (click)="view.emit(note())"
     >
-      <div class="mb-2 flex items-start justify-between gap-2">
-        <h3 class="line-clamp-1 text-base font-semibold text-[var(--color-on-surface)]">
-          {{ note().titulo }}
-        </h3>
-        @if (note().isFavorite) {
-          <span class="shrink-0 text-base" title="Favorita">⭐</span>
-        }
+      <div class="p-5">
+        <div class="mb-3 flex items-start justify-between gap-2">
+          <h3 class="line-clamp-1 text-base font-semibold" style="color: var(--text-primary)">
+            {{ note().titulo }}
+          </h3>
+          @if (note().isFavorite) {
+            <span class="shrink-0 text-sm" title="Favorita">⭐</span>
+          }
+        </div>
+
+        <p class="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed" style="color: var(--text-secondary)">
+          {{ note().contenido | notePreview:180 }}
+        </p>
       </div>
 
-      <p class="mb-4 line-clamp-3 flex-1 text-sm text-[var(--color-on-surface-muted)]">
-        {{ note().contenido | notePreview:200 }}
-      </p>
-
-      <div class="flex items-center gap-2 border-t border-[var(--color-border)] pt-3">
+      <div class="flex items-center gap-1 border-t px-4 py-2.5" style="border-color: var(--border-color); background: var(--bg-secondary)">
         <button
           (click)="onToggleFavorite($event)"
-          class="rounded-[var(--radius-sm)] px-2 py-1 text-xs transition-colors"
-          [class.text-[var(--color-warning)]]="note().isFavorite"
-          [class.hover:bg-[var(--color-warning-light)]]="note().isFavorite"
-          [class.text-[var(--color-on-surface-muted)]]="!note().isFavorite"
-          [class.hover:bg-[var(--color-surface-alt)]]="!note().isFavorite"
+          class="card-action card-action--fav"
           [attr.aria-label]="note().isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'"
         >
           {{ note().isFavorite ? '⭐ Favorita' : '☆ Favorita' }}
         </button>
         <button
           (click)="onEdit($event)"
-          class="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--color-on-surface-muted)] hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-on-surface)] transition-colors"
+          class="card-action card-action--edit"
           aria-label="Editar nota"
         >
           ✏️ Editar
         </button>
         <button
           (click)="onDelete($event)"
-          class="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] transition-colors"
+          class="card-action card-action--delete"
           aria-label="Eliminar nota"
         >
           🗑️ Eliminar

@@ -15,7 +15,6 @@ import { ToastService } from './toast.service';
       @for (toast of toastService.toasts(); track toast.id) {
         <div
           [class]="toastClass(toast)"
-          [@.class]="toast.dismissing ? 'animate-slide-out' : 'animate-slide-in'"
           role="alert"
         >
           <div class="flex items-start gap-3">
@@ -23,12 +22,13 @@ import { ToastService } from './toast.service';
             <div class="flex-1">
               <p class="text-sm font-semibold">{{ toast.title }}</p>
               @if (toast.message) {
-                <p class="mt-0.5 text-sm opacity-90">{{ toast.message }}</p>
+                <p class="mt-0.5 text-sm" style="opacity:0.9">{{ toast.message }}</p>
               }
             </div>
             <button
               (click)="toastService.dismiss(toast.id)"
-              class="ml-2 text-current opacity-60 hover:opacity-100 transition-opacity"
+              class="ml-2 opacity-60 hover:opacity-100 transition-opacity"
+              style="color:inherit;background:none;border:none;cursor:pointer"
               aria-label="Cerrar"
             >
               ✕
@@ -38,6 +38,26 @@ import { ToastService } from './toast.service';
       }
     </div>
   `,
+  styles: [`
+    .toast-base {
+      min-width: 20rem;
+      max-width: 28rem;
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      transition: all 0.3s ease;
+    }
+    .toast-success { background: var(--success); color: #fff; }
+    .toast-error { background: var(--danger); color: #fff; }
+    .toast-warning { background: var(--warning); color: #1a1b1e; }
+    .toast-info { background: var(--accent); color: #fff; }
+    .toast-enter { animation: slide-in 0.3s ease; }
+    .toast-exit { transform: translateX(100%); opacity: 0; }
+
+    @keyframes slide-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `],
 })
 export class ToastContainerComponent {
   protected readonly toastService = inject(ToastService);
@@ -53,20 +73,13 @@ export class ToastContainerComponent {
   }
 
   toastClass(toast: { type: string; dismissing?: boolean }): string {
-    const base =
-      'min-w-80 max-w-md rounded-[var(--radius-lg)] border shadow-[var(--shadow-lg)] p-4 text-white transition-all duration-300';
-
-    const variants: Record<string, string> = {
-      success: 'bg-[var(--color-success)] border-transparent',
-      error: 'bg-[var(--color-danger)] border-transparent',
-      warning: 'bg-[var(--color-warning)] border-transparent text-gray-900',
-      info: 'bg-[var(--color-info)] border-transparent',
+    const typeMap: Record<string, string> = {
+      success: 'toast-success',
+      error: 'toast-error',
+      warning: 'toast-warning',
+      info: 'toast-info',
     };
-
-    const animation = toast.dismissing
-      ? 'translate-x-full opacity-0'
-      : 'translate-x-0 opacity-100';
-
-    return [base, variants[toast.type] ?? variants['info'], animation].join(' ');
+    const animation = toast.dismissing ? 'toast-exit' : 'toast-enter';
+    return `toast-base ${typeMap[toast.type] ?? typeMap['info']} ${animation}`;
   }
 }

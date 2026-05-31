@@ -15,38 +15,60 @@ import Highlight from '@tiptap/extension-highlight';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   template: `
-    <div class="rich-text-editor rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-      <div class="flex flex-wrap items-center gap-1 border-b border-[var(--color-border)] bg-[var(--color-surface-alt)] px-2 py-1.5">
-        <button (click)="toggleBold()" [class.is-active]="isActive('bold')" class="editor-btn" title="Negrita (Ctrl+B)"><b>B</b></button>
-        <button (click)="toggleItalic()" [class.is-active]="isActive('italic')" class="editor-btn" title="Itálica (Ctrl+I)"><i>I</i></button>
-        <button (click)="toggleUnderline()" [class.is-active]="isActive('underline')" class="editor-btn" title="Subrayado (Ctrl+U)"><u>U</u></button>
-        <button (click)="toggleStrike()" [class.is-active]="isActive('strike')" class="editor-btn" title="Tachado"><s>S</s></button>
-        <div class="mx-1 h-4 w-px bg-[var(--color-border)]"></div>
-        <button (click)="toggleHeading(2)" [class.is-active]="isActive('heading', { level: 2 })" class="editor-btn" title="Título 2">H2</button>
-        <button (click)="toggleHeading(3)" [class.is-active]="isActive('heading', { level: 3 })" class="editor-btn" title="Título 3">H3</button>
-        <div class="mx-1 h-4 w-px bg-[var(--color-border)]"></div>
-        <button (click)="toggleBulletList()" [class.is-active]="isActive('bulletList')" class="editor-btn" title="Lista">•</button>
-        <button (click)="toggleOrderedList()" [class.is-active]="isActive('orderedList')" class="editor-btn" title="Lista numerada">1.</button>
-        <button (click)="toggleBlockquote()" [class.is-active]="isActive('blockquote')" class="editor-btn" title="Cita">❝</button>
-        <button (click)="toggleCodeBlock()" [class.is-active]="isActive('codeBlock')" class="editor-btn" title="Bloque de código">&lt;/&gt;</button>
-        <div class="mx-1 h-4 w-px bg-[var(--color-border)]"></div>
-        <button (click)="setAlign('left')" class="editor-btn" title="Alinear izquierda">◧</button>
-        <button (click)="setAlign('center')" class="editor-btn" title="Centrar">▦</button>
-        <button (click)="setAlign('right')" class="editor-btn" title="Alinear derecha">◨</button>
-        <div class="mx-1 h-4 w-px bg-[var(--color-border)]"></div>
-        <button (click)="toggleHighlight()" [class.is-active]="isActive('highlight')" class="editor-btn" title="Resaltar">🖍</button>
-        <button (click)="clearMarks()" class="editor-btn" title="Limpiar formato">🧹</button>
+    <div class="rte">
+      <div class="rte-toolbar">
+        <button (click)="toggleBold()" [class.rte-active]="isActive('bold')" class="rte-btn" title="Negrita (Ctrl+B)"><b>B</b></button>
+        <button (click)="toggleItalic()" [class.rte-active]="isActive('italic')" class="rte-btn" title="Itálica (Ctrl+I)"><i>I</i></button>
+        <button (click)="toggleUnderline()" [class.rte-active]="isActive('underline')" class="rte-btn" title="Subrayado (Ctrl+U)"><u>U</u></button>
+        <button (click)="toggleStrike()" [class.rte-active]="isActive('strike')" class="rte-btn" title="Tachado"><s>S</s></button>
+        <div class="rte-divider"></div>
+        <button (click)="toggleHeading(2)" [class.rte-active]="isActive('heading', { level: 2 })" class="rte-btn" title="Título 2">H2</button>
+        <button (click)="toggleHeading(3)" [class.rte-active]="isActive('heading', { level: 3 })" class="rte-btn" title="Título 3">H3</button>
+        <div class="rte-divider"></div>
+        <button (click)="toggleBulletList()" [class.rte-active]="isActive('bulletList')" class="rte-btn" title="Lista">•</button>
+        <button (click)="toggleOrderedList()" [class.rte-active]="isActive('orderedList')" class="rte-btn" title="Lista numerada">1.</button>
+        <button (click)="toggleBlockquote()" [class.rte-active]="isActive('blockquote')" class="rte-btn" title="Cita">❝</button>
+        <button (click)="toggleCodeBlock()" [class.rte-active]="isActive('codeBlock')" class="rte-btn" title="Bloque de código">&lt;/&gt;</button>
+        <div class="rte-divider"></div>
+        <button (click)="setAlign('left')" class="rte-btn" title="Alinear izquierda">◧</button>
+        <button (click)="setAlign('center')" class="rte-btn" title="Centrar">▦</button>
+        <button (click)="setAlign('right')" class="rte-btn" title="Alinear derecha">◨</button>
+        <div class="rte-divider"></div>
+        <button (click)="toggleHighlight()" [class.rte-active]="isActive('highlight')" class="rte-btn" title="Resaltar">🖍</button>
+        <button (click)="clearMarks()" class="rte-btn" title="Limpiar formato">🧹</button>
       </div>
 
-      <div #editorContainer class="tiptap-content min-h-[200px] max-h-[400px] overflow-y-auto px-4 py-3 focus:outline-none" style="font-size: 14px;"></div>
+      <div #editorContainer class="rte-content"></div>
 
-      <div class="border-t border-[var(--color-border)] bg-[var(--color-surface-alt)] px-3 py-1 text-xs text-[var(--color-on-surface-muted)]">
+      <div class="rte-footer">
         {{ charCount }} caracteres
       </div>
     </div>
   `,
   styles: [`
-    .editor-btn {
+    .rte {
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: var(--bg);
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    .rte:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(76,110,245,0.15);
+    }
+
+    .rte-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 8px;
+    }
+
+    .rte-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -55,20 +77,44 @@ import Highlight from '@tiptap/extension-highlight';
       border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 500;
-      color: var(--color-on-surface-muted);
+      color: var(--text-muted);
       background: transparent;
       border: none;
       cursor: pointer;
       transition: background-color 0.15s, color 0.15s;
     }
-    .editor-btn:hover {
-      background: var(--color-surface);
-      color: var(--color-on-surface);
+    .rte-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
     }
-    .editor-btn.is-active {
-      background: var(--color-primary-100);
-      color: var(--color-primary-700);
+    .rte-btn.rte-active {
+      background: var(--accent-light);
+      color: var(--accent);
     }
+
+    .rte-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--border-color);
+      margin: 0 4px;
+    }
+
+    .rte-content {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+
+    .rte-footer {
+      border-top: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
     :host ::ng-deep .ProseMirror {
       outline: none;
       min-height: 200px;
@@ -76,16 +122,17 @@ import Highlight from '@tiptap/extension-highlight';
     :host ::ng-deep .ProseMirror p.is-editor-empty:first-child::before {
       content: attr(data-placeholder);
       float: left;
-      color: var(--color-on-surface-muted);
+      color: var(--text-muted);
       pointer-events: none;
       height: 0;
     }
-    :host ::ng-deep .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; margin: 0.75rem 0 0.25rem; }
-    :host ::ng-deep .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+    :host ::ng-deep .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; margin: 0.75rem 0 0.25rem; color: var(--text-primary); }
+    :host ::ng-deep .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0 0.25rem; color: var(--text-primary); }
     :host ::ng-deep .ProseMirror ul, :host ::ng-deep .ProseMirror ol { padding-left: 1.5rem; margin: 0.5rem 0; }
-    :host ::ng-deep .ProseMirror blockquote { border-left: 3px solid var(--color-primary-300); padding-left: 1rem; margin: 0.5rem 0; color: var(--color-on-surface-muted); }
-    :host ::ng-deep .ProseMirror pre { background: var(--color-surface-alt); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin: 0.5rem 0; overflow-x: auto; font-size: 0.85rem; }
-    :host ::ng-deep .ProseMirror mark { background: var(--color-warning-light); padding: 0.1rem 0; }
+    :host ::ng-deep .ProseMirror blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 0.5rem 0; color: var(--text-secondary); }
+    :host ::ng-deep .ProseMirror pre { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin: 0.5rem 0; overflow-x: auto; font-size: 0.85rem; }
+    :host ::ng-deep .ProseMirror mark { background: var(--warning-light); padding: 0.1rem 0; }
+    :host ::ng-deep .ProseMirror a { color: var(--accent); }
   `],
 })
 export class RichTextEditorComponent implements OnInit, OnDestroy {

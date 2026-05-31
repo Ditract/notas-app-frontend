@@ -24,24 +24,25 @@ import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component
   template: `
     <div class="space-y-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-2xl font-bold text-[var(--color-on-surface)]">Mis Notas</h1>
+        <h1 class="text-2xl font-bold" style="color: var(--text-primary)">Mis Notas</h1>
         <button
           (click)="showNewEditor = true"
-          class="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary-600)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-700)] transition-colors"
+          class="btn btn-primary btn-md"
         >
           + Nueva nota
         </button>
       </div>
 
       <div class="relative">
+        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style="width:16px;height:16px;color:var(--text-muted)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input
           type="text"
           [value]="facade.searchTerm()"
           (input)="onSearch($event)"
           placeholder="Buscar notas..."
-          class="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pl-10 pr-4 text-sm text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] transition-colors"
+          class="input-field"
+          style="padding-left: 2.75rem"
         />
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-on-surface-muted)]">🔍</span>
       </div>
 
       @if (facade.loading()) {
@@ -52,7 +53,7 @@ import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component
         <app-empty-state
           icon="📝"
           title="Sin notas"
-          message="Crea tu primera nota haciendo clic en el bot\u00f3n de arriba."
+          message="Crea tu primera nota haciendo clic en el botón de arriba."
         />
       }
 
@@ -60,12 +61,12 @@ import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component
         <app-empty-state
           icon="🔍"
           title="Sin resultados"
-          message="No se encontraron notas que coincidan con tu b\u00fasqueda."
+          message="No se encontraron notas que coincidan con tu búsqueda."
         />
       }
 
       @else {
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           @for (note of facade.filteredNotes(); track note.id) {
             <app-note-card
               [note]="note"
