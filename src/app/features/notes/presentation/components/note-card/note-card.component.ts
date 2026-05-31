@@ -1,0 +1,76 @@
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { NotePreviewPipe } from '../../../../../shared/pipes/note-preview.pipe';
+
+@Component({
+  selector: 'app-note-card',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NotePreviewPipe],
+  template: `
+    <div
+      class="card note-card-hover cursor-pointer overflow-hidden p-0"
+      (click)="view.emit(note())"
+    >
+      <div class="p-5">
+        <div class="mb-3 flex items-start justify-between gap-2">
+          <h3 class="line-clamp-1 text-base font-semibold" style="color: var(--text-primary)">
+            {{ note().titulo }}
+          </h3>
+          @if (note().isFavorite) {
+            <span class="shrink-0 text-sm" title="Favorita">⭐</span>
+          }
+        </div>
+
+        <p class="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed" style="color: var(--text-secondary)">
+          {{ note().contenido | notePreview:180 }}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-1 border-t px-4 py-2.5" style="border-color: var(--border-color); background: var(--bg-secondary)">
+        <button
+          (click)="onToggleFavorite($event)"
+          class="card-action card-action--fav"
+          [attr.aria-label]="note().isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+        >
+          {{ note().isFavorite ? '⭐ Favorita' : '☆ Favorita' }}
+        </button>
+        <button
+          (click)="onEdit($event)"
+          class="card-action card-action--edit"
+          aria-label="Editar nota"
+        >
+          ✏️ Editar
+        </button>
+        <button
+          (click)="onDelete($event)"
+          class="card-action card-action--delete"
+          aria-label="Eliminar nota"
+        >
+          🗑️ Eliminar
+        </button>
+      </div>
+    </div>
+  `,
+})
+export class NoteCardComponent {
+  readonly note = input.required<{ id: number; titulo: string; contenido: string; isFavorite: boolean }>();
+  readonly view = output<{ id: number; titulo: string; contenido: string; isFavorite: boolean }>();
+  readonly edit = output<{ id: number; titulo: string; contenido: string; isFavorite: boolean }>();
+  readonly delete = output<number>();
+  readonly toggleFavorite = output<number>();
+
+  onToggleFavorite(event: Event): void {
+    event.stopPropagation();
+    this.toggleFavorite.emit(this.note().id);
+  }
+
+  onEdit(event: Event): void {
+    event.stopPropagation();
+    this.edit.emit(this.note());
+  }
+
+  onDelete(event: Event): void {
+    event.stopPropagation();
+    this.delete.emit(this.note().id);
+  }
+}
