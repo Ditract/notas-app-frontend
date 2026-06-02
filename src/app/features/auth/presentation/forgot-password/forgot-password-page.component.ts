@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthFlowFacade } from '../../application/auth-flow.facade';
@@ -51,13 +51,15 @@ import { emailValidator } from '../../../../shared/validators/validators';
               >
                 @if (facade.forgotPasswordState() === 'loading') {
                   <span class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></span>
+                  Enviando...
+                } @else {
+                  Enviar email de recuperación
                 }
-                {{ buttonText() }}
               </button>
             </form>
 
             <p class="mt-6 text-center text-sm" style="color: var(--text-muted)">
-              <a routerLink="/login" class="font-medium no-underline" style="color: var(--accent)">Volver al inicio de sesión</a>
+              <a routerLink="/login" class="font-medium" style="color: var(--accent)">Volver al inicio de sesión</a>
             </p>
           } @else {
             <div class="py-8 text-center">
@@ -84,9 +86,7 @@ export class ForgotPasswordPageComponent {
     email: ['', [Validators.required, emailValidator]],
   });
 
-  readonly buttonText = computed(() => 
-    this.facade.forgotPasswordState() === 'loading' ? 'Enviando...' : 'Enviar email de recuperación'
-  );
+  protected isLoading = () => this.facade.forgotPasswordState() === 'loading';
 
   get isEmailInvalid(): boolean {
     const ctrl = this.form.get('email');

@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthFlowFacade } from '../../application/auth-flow.facade';
@@ -86,7 +86,7 @@ import { emailValidator } from '../../../../shared/validators/validators';
             </div>
 
             <div class="text-right">
-              <a routerLink="/forgot-password" class="text-sm font-medium no-underline" style="color: var(--accent)">
+              <a routerLink="/forgot-password" class="text-sm font-medium" style="color: var(--accent)">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
@@ -98,14 +98,16 @@ import { emailValidator } from '../../../../shared/validators/validators';
             >
               @if (facade.loginState() === 'loading') {
                 <span class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></span>
+                Iniciando sesión...
+              } @else {
+                Iniciar sesión
               }
-              {{ buttonText() }}
             </button>
           </form>
 
           <p class="mt-6 text-center text-sm" style="color: var(--text-muted)">
             ¿No tienes cuenta?
-            <a routerLink="/register" class="font-medium no-underline" style="color: var(--accent)">Regístrate</a>
+            <a routerLink="/register" class="font-medium" style="color: var(--accent)">Regístrate</a>
           </p>
         </div>
       </div>
@@ -122,9 +124,7 @@ export class LoginPageComponent {
     password: ['', [Validators.required]],
   });
 
-  readonly buttonText = computed(() => 
-    this.facade.loginState() === 'loading' ? 'Iniciando sesión...' : 'Iniciar sesión'
-  );
+  protected isLoading = () => this.facade.loginState() === 'loading';
 
   get emailInvalid(): boolean {
     const ctrl = this.form.get('email');
