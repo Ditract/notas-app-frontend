@@ -1,4 +1,5 @@
 import { InjectionToken } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 export interface AppConfig {
   apiBaseUrl: string;
@@ -17,7 +18,7 @@ export interface AppConfig {
 export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG', {
   providedIn: 'root',
   factory: () => ({
-    apiBaseUrl: 'http://localhost:8080/api',
+    apiBaseUrl: environment.apiBaseUrl,
     validation: {
       emailPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       passwordMinLength: 8,
