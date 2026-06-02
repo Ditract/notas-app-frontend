@@ -48,6 +48,10 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'verify.html',
+        redirectTo: 'verify',
+      },
+      {
         path: 'verify',
         loadComponent: () =>
           import('./features/auth/presentation/verify/verify-page.component').then(
