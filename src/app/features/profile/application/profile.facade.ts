@@ -28,7 +28,7 @@ export class ProfileFacade {
   readonly editingName = computed(() => this._editingName());
   readonly editingPassword = computed(() => this._editingPassword());
   readonly userEmail = computed(() => this.authFacade.currentUser()?.email ?? '');
-  readonly favoritesCount = computed(() => this._perfil()?.notasFavoritas?.length ?? 0);
+  readonly favoritesCount = computed(() => this._favoriteNotes().length);
 
   load(): void {
     this._loading.set(true);
@@ -45,16 +45,9 @@ export class ProfileFacade {
     });
   }
 
-  private loadFavoriteNotes(favoriteIds: number[]): void {
-    if (favoriteIds.length === 0) {
-      this._favoriteNotes.set([]);
-      return;
-    }
-
-    this.notesRepo.list().subscribe({
-      next: (allNotes) => {
-        this._favoriteNotes.set(allNotes.filter((n) => favoriteIds.includes(n.id)));
-      },
+  private loadFavoriteNotes(_favoriteIds: number[]): void {
+    this.notesRepo.favoritas().subscribe({
+      next: (notes) => this._favoriteNotes.set(notes),
       error: () => {},
     });
   }

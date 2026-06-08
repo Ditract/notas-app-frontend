@@ -7,6 +7,7 @@ import { SpinnerComponent } from '../../../../shared/ui/spinner.component';
 import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component';
 import { NoteViewDialogComponent } from '../../../notes/presentation/components/note-view-dialog/note-view-dialog.component';
 import { passwordValidator } from '../../../../shared/validators/validators';
+import { NotesFacade } from '../../../notes/application/notes.facade';
 
 @Component({
   selector: 'app-profile-page',
@@ -42,6 +43,28 @@ import { passwordValidator } from '../../../../shared/validators/validators';
             </div>
           </div>
         </div>
+
+        @if (notesFacade.estadisticas(); as stats) {
+          <div class="card p-6">
+            <h2 class="mb-4 text-lg font-semibold" style="color: var(--text-primary)">Estadísticas</h2>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              <div class="rounded-lg p-4 text-center" style="background: var(--bg-secondary)">
+                <p class="text-2xl font-bold" style="color: var(--accent)">{{ stats.totalNotas }}</p>
+                <p class="text-sm" style="color: var(--text-muted)">Total notas</p>
+              </div>
+              <div class="rounded-lg p-4 text-center" style="background: var(--bg-secondary)">
+                <p class="text-2xl font-bold" style="color: var(--accent)">{{ facade.favoriteNotes().length }}</p>
+                <p class="text-sm" style="color: var(--text-muted)">Favoritas</p>
+              </div>
+              @for (cat of categoriaKeys(stats.notasPorCategoria); track cat) {
+                <div class="rounded-lg p-4 text-center" style="background: var(--bg-secondary)">
+                  <p class="text-2xl font-bold" style="color: var(--accent)">{{ stats.notasPorCategoria[cat] }}</p>
+                  <p class="text-sm" style="color: var(--text-muted)">{{ cat }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
         <div>
           <h2 class="mb-4 text-lg font-semibold" style="color: var(--text-primary)">Notas favoritas</h2>
@@ -191,6 +214,7 @@ import { passwordValidator } from '../../../../shared/validators/validators';
 })
 export class ProfilePageComponent implements OnInit {
   protected readonly facade = inject(ProfileFacade);
+  protected readonly notesFacade = inject(NotesFacade);
   private readonly authFacade = inject(AuthFacade);
   private readonly fb = inject(FormBuilder);
 
@@ -217,7 +241,12 @@ export class ProfilePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.load();
+    this.notesFacade.cargarEstadisticas();
     this.nameForm.patchValue({ nombre: this.facade.perfil()?.nombre ?? '' });
+  }
+
+  categoriaKeys(obj: Record<string, number>): string[] {
+    return Object.keys(obj).filter((k) => obj[k] > 0);
   }
 
   onUpdateName(): void {
