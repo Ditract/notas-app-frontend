@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { NotesRepository } from '../domain/notes.repository';
 import { FavoritesRepository } from '../domain/favorites.repository';
 import { Nota, CreateNotaData, UpdateNotaData } from '../domain/nota.model';
+import { EstadisticasResponse } from '../domain/estadisticas.model';
 import { ToastService } from '../../../shared/ui/toast.service';
 
 export type NotesViewMode = 'grid' | 'list';
@@ -15,6 +16,9 @@ export class NotesFacade {
   private readonly _notes = signal<Nota[]>([]);
   private readonly _favorites = signal<Set<number>>(new Set());
   private readonly _searchTerm = signal('');
+  private readonly _categoriaFiltro = signal<string | null>(null);
+  private readonly _estadisticas = signal<EstadisticasResponse | null>(null);
+  private readonly _notasRecientes = signal<Nota[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _editingNote = signal<Nota | null>(null);
@@ -25,6 +29,9 @@ export class NotesFacade {
   readonly notes = computed(() => this._notes());
   readonly favorites = computed(() => this._favorites());
   readonly searchTerm = computed(() => this._searchTerm());
+  readonly categoriaFiltro = computed(() => this._categoriaFiltro());
+  readonly estadisticas = computed(() => this._estadisticas());
+  readonly notasRecientes = computed(() => this._notasRecientes());
   readonly loading = computed(() => this._loading());
   readonly error = computed(() => this._error());
   readonly editingNote = computed(() => this._editingNote());
@@ -33,12 +40,19 @@ export class NotesFacade {
 
   readonly filteredNotes = computed(() => {
     const term = this._searchTerm().toLowerCase().trim();
+    const categoria = this._categoriaFiltro();
     const notes = this._notes();
     const favs = this._favorites();
 
-    if (!term) return notes.map((n) => ({ ...n, isFavorite: favs.has(n.id) }));
+    let result = notes;
 
-    return notes
+    if (categoria) {
+      result = result.filter((n) => n.categoria === categoria);
+    }
+
+    if (!term) return result.map((n) => ({ ...n, isFavorite: favs.has(n.id) }));
+
+    return result
       .filter((n) => {
         const plainContent = n.contenido.replace(/<[^>]*>/g, '').toLowerCase();
         return n.titulo.toLowerCase().includes(term) || plainContent.includes(term);
@@ -177,5 +191,43 @@ export class NotesFacade {
 
   isFavorite(noteId: number): boolean {
     return this._favorites().has(noteId);
+  }
+
+  setCategoriaFiltro(categoria: string | null): void {
+    this._categoriaFiltro.set(categoria);
+  }
+
+  cargarEstadisticas(): void {
+    this.notesRepo.estadisticas().subscribe({
+      next: (stats) => this._estadisticas.set(stats),
+      error: () => {},
+    });
+  }
+
+  cargarRecientes(limit: number): void {
+    this.notesRepo.recientes(limit).subscribe({
+      next: (notes) => this._notasRecientes.set(notes),
+      error: () => {},
+    });
+  }
+
+  buscarServerSide(keyword: string): void {
+    if (!keyword.trim()) {
+      this.load();
+      return;
+    }
+    this._loading.set(true);
+    this.notesRepo.buscar(keyword).subscribe({
+      next: (notes) => {
+        this._notes.set(notes);
+        this._loading.set(false);
+        this.loadFavorites();
+      },
+      error: () => {
+        this._error.set('Error al buscar notas');
+        this._loading.set(false);
+        this.toast.error('Error', 'No se pudieron buscar las notas');
+      },
+    });
   }
 }

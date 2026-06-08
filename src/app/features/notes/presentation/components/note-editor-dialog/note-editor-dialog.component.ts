@@ -2,6 +2,7 @@ import { Component, input, output, inject, ChangeDetectionStrategy } from '@angu
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RichTextEditorComponent } from '../../../../../shared/ui/rich-text-editor.component';
 import { APP_CONFIG, AppConfig } from '../../../../../core/config/app-config.token';
+import { CATEGORIAS } from '../../../domain/categoria.constantes';
 
 @Component({
   selector: 'app-note-editor-dialog',
@@ -58,6 +59,22 @@ import { APP_CONFIG, AppConfig } from '../../../../../core/config/app-config.tok
             }
           </div>
 
+          <div>
+            <label for="note-categoria" class="mb-1.5 block text-sm font-medium" style="color: var(--text-primary)">
+              Categoría
+            </label>
+            <select
+              id="note-categoria"
+              [formControl]="categoriaControl"
+              class="input-field"
+            >
+              <option value="">Sin categoría</option>
+              @for (cat of categorias; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+
           <div class="flex justify-end gap-3 pt-2">
             <button type="button" (click)="cancel.emit()" class="btn btn-secondary btn-md">Cancelar</button>
             <button
@@ -75,13 +92,16 @@ import { APP_CONFIG, AppConfig } from '../../../../../core/config/app-config.tok
   `,
 })
 export class NoteEditorDialogComponent {
-  readonly note = input<{ id: number; titulo: string; contenido: string } | null>(null);
-  readonly save = output<{ titulo: string; contenido: string }>();
+  readonly note = input<{ id: number; titulo: string; contenido: string; categoria?: string } | null>(null);
+  readonly save = output<{ titulo: string; contenido: string; categoria?: string }>();
   readonly cancel = output<void>();
 
   private readonly fb = inject(FormBuilder);
 
+  readonly categorias = CATEGORIAS;
+
   tituloControl = this.fb.control(this.note()?.titulo ?? '', [Validators.required, Validators.maxLength(255)]);
+  categoriaControl = this.fb.control(this.note()?.categoria ?? '');
   contenidoInitial = this.note()?.contenido ?? '';
   contenidoValue = this.note()?.contenido ?? '';
   contenidoError: string | null = null;
@@ -103,9 +123,11 @@ export class NoteEditorDialogComponent {
       this.tituloControl.markAsTouched();
       return;
     }
+    const categoria = this.categoriaControl.value;
     this.save.emit({
       titulo: this.tituloControl.value ?? '',
       contenido: this.contenidoValue,
+      categoria: categoria || undefined,
     });
   }
 }
