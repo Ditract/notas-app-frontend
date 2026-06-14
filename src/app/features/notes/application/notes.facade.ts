@@ -5,6 +5,7 @@ import { Nota, CreateNotaData, UpdateNotaData } from '../domain/nota.model';
 import { EstadisticasResponse } from '../domain/estadisticas.model';
 import { ToastService } from '../../../shared/ui/toast.service';
 import { ChatFacade } from '../../chat/application/chat.facade';
+import { ApiError } from '../../../core/http/api.error';
 
 export type NotesViewMode = 'grid' | 'list';
 
@@ -79,10 +80,10 @@ export class NotesFacade {
         this._loading.set(false);
         this.loadFavorites();
       },
-      error: () => {
-        this._error.set('Error al cargar las notas');
+      error: (err: ApiError) => {
+        this._error.set(err.message || 'Error al cargar las notas');
         this._loading.set(false);
-        this.toast.error('Error', 'No se pudieron cargar las notas');
+        this.toast.error('Error', err.message ?? 'No se pudieron cargar las notas');
       },
     });
   }
@@ -107,8 +108,8 @@ export class NotesFacade {
           categoria: note.categoria ?? undefined,
         });
       },
-      error: () => {
-        this.toast.error('Error', 'No se pudo crear la nota');
+      error: (err: ApiError) => {
+        this.toast.error('Error', err.message ?? 'No se pudo crear la nota');
       },
     });
   }
@@ -128,8 +129,8 @@ export class NotesFacade {
           categoria: updated.categoria ?? undefined,
         });
       },
-      error: () => {
-        this.toast.error('Error', 'No se pudo actualizar la nota');
+      error: (err: ApiError) => {
+        this.toast.error('Error', err.message ?? 'No se pudo actualizar la nota');
       },
     });
   }
@@ -148,8 +149,8 @@ export class NotesFacade {
           categoria: note?.categoria ?? undefined,
         });
       },
-      error: () => {
-        this.toast.error('Error', 'No se pudo eliminar la nota');
+      error: (err: ApiError) => {
+        this.toast.error('Error', err.message ?? 'No se pudo eliminar la nota');
       },
     });
   }
@@ -172,7 +173,8 @@ export class NotesFacade {
             categoria: note?.categoria ?? undefined,
           });
         },
-        error: () => this.toast.error('Error', 'No se pudo quitar de favoritos'),
+        error: (err: ApiError) =>
+          this.toast.error('Error', err.message ?? 'No se pudo quitar de favoritos'),
       });
     } else {
       this.favoritesRepo.addFavorite(noteId).subscribe({
@@ -189,7 +191,8 @@ export class NotesFacade {
             categoria: note?.categoria ?? undefined,
           });
         },
-        error: () => this.toast.error('Error', 'No se pudo agregar a favoritos'),
+        error: (err: ApiError) =>
+          this.toast.error('Error', err.message ?? 'No se pudo agregar a favoritos'),
       });
     }
   }
@@ -256,10 +259,10 @@ export class NotesFacade {
         this._loading.set(false);
         this.loadFavorites();
       },
-      error: () => {
-        this._error.set('Error al buscar notas');
+      error: (err: ApiError) => {
+        this._error.set(err.message || 'Error al buscar notas');
         this._loading.set(false);
-        this.toast.error('Error', 'No se pudieron buscar las notas');
+        this.toast.error('Error', err.message ?? 'No se pudieron buscar las notas');
       },
     });
   }

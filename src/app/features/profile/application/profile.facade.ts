@@ -5,6 +5,7 @@ import { ToastService } from '../../../shared/ui/toast.service';
 import { Nota } from '../../notes/domain/nota.model';
 import { NotesRepository } from '../../notes/domain/notes.repository';
 import { FavoritesRepository } from '../../notes/domain/favorites.repository';
+import { ApiError } from '../../../core/http/api.error';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileFacade {
@@ -38,9 +39,9 @@ export class ProfileFacade {
         this._loading.set(false);
         this.loadFavoriteNotes(perfil.notasFavoritas ?? []);
       },
-      error: () => {
+      error: (err: ApiError) => {
         this._loading.set(false);
-        this.toast.error('Error', 'No se pudo cargar el perfil');
+        this.toast.error('Error', err.message ?? 'No se pudo cargar el perfil');
       },
     });
   }
@@ -60,9 +61,9 @@ export class ProfileFacade {
         this._editingName.set(false);
         this.toast.success('Perfil actualizado', 'Tu nombre ha sido cambiado exitosamente.');
       },
-      error: () => {
+      error: (err: ApiError) => {
         this._editingName.set(false);
-        this.toast.error('Error', 'No se pudo actualizar el nombre');
+        this.toast.error('Error', err.message ?? 'No se pudo actualizar el nombre');
       },
     });
   }
@@ -74,10 +75,9 @@ export class ProfileFacade {
         this._editingPassword.set(false);
         this.toast.success('Contraseña actualizada', 'Tu contraseña ha sido cambiada exitosamente.');
       },
-      error: (err: Record<string, unknown>) => {
+      error: (err: ApiError) => {
         this._editingPassword.set(false);
-        const errorObj = err as { message?: string };
-        this.toast.error('Error', errorObj.message ?? 'No se pudo cambiar la contraseña');
+        this.toast.error('Error', err.message ?? 'No se pudo cambiar la contraseña');
       },
     });
   }
@@ -88,8 +88,8 @@ export class ProfileFacade {
         this.toast.info('Favorito removido', 'La nota ha sido quitada de favoritos.');
         this.load();
       },
-      error: () => {
-        this.toast.error('Error', 'No se pudo quitar de favoritos');
+      error: (err: ApiError) => {
+        this.toast.error('Error', err.message ?? 'No se pudo quitar de favoritos');
       },
     });
   }
