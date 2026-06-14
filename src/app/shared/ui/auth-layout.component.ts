@@ -5,11 +5,12 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8"
-      style="background: var(--bg-secondary)"
-    >
-      <div class="w-full max-w-md rounded-lg p-8" style="background: var(--bg)">
+    <div class="auth-shell">
+      <div class="auth-shell__blob auth-shell__blob--1" aria-hidden="true"></div>
+      <div class="auth-shell__blob auth-shell__blob--2" aria-hidden="true"></div>
+      <div class="auth-shell__blob auth-shell__blob--3" aria-hidden="true"></div>
+
+      <div class="auth-card">
         <ng-content />
       </div>
     </div>
