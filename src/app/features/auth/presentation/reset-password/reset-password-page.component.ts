@@ -2,7 +2,7 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthFlowFacade } from '../../application/auth-flow.facade';
-import { passwordValidator } from '../../../../shared/validators/validators';
+import { createPasswordValidator } from '../../../../shared/validators/validators';
 
 @Component({
   selector: 'app-reset-password-page',
@@ -120,12 +120,13 @@ import { passwordValidator } from '../../../../shared/validators/validators';
 })
 export class ResetPasswordPageComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly passwordValidatorFn = createPasswordValidator();
   protected readonly facade = inject(AuthFlowFacade);
   protected showPassword = false;
   private token: string | null = null;
 
   form = this.fb.group({
-    password: ['', [Validators.required, passwordValidator]],
+    password: ['', [Validators.required, this.passwordValidatorFn]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: this.passwordMatchValidator });
 

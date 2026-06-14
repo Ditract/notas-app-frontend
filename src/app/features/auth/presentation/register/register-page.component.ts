@@ -1,245 +1,200 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthFlowFacade } from '../../application/auth-flow.facade';
 import { AuthLayoutComponent } from '../../../../shared/ui/auth-layout.component';
-import { FormInputComponent } from '../../../../shared/ui/form-input.component';
-import { PasswordInputComponent } from '../../../../shared/ui/password-input.component';
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, AuthLayoutComponent, FormInputComponent, PasswordInputComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthLayoutComponent],
   template: `
-    <app-auth-layout
-      gradient="linear-gradient(135deg, #d4e7d0 0%, #e8f0e4 100%)"
-      title="Comienza tu viaje"
-      subtitle="Organiza tus ideas de forma inteligente"
-      [features]="['Registro gratuito', 'Sincronización en la nube', 'Interfaz intuitiva']"
-    >
+    <app-auth-layout>
       @if (facade.registerState() !== 'success') {
-        <div class="animate-fade-in-up">
-          <div class="mb-8">
-            <h1 class="text-2xl font-bold" style="color: #2d3748">Crear cuenta</h1>
-            <p class="mt-1 text-sm" style="color: #718096">Regístrate para empezar a tomar notas</p>
+        <div class="auth-animate-in">
+          <div class="auth-header">
+            <div class="auth-header__icon" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+            </div>
+            <h1 class="auth-heading">Crear cuenta</h1>
+            <p class="auth-subtitle">Regístrate para empezar a tomar notas</p>
           </div>
 
           @if (facade.registerError()) {
-            <div class="mb-5 rounded-lg border p-4 text-sm animate-fade-in" style="background: #fee2e2; border-color: #c47a7a; color: #991b1b">
-              <div class="flex items-start gap-3">
-                <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-                </svg>
-                <div>
-                  <p class="font-medium">Error en el registro</p>
-                  <p class="mt-1 text-xs opacity-90">{{ facade.registerError() }}</p>
-                </div>
-              </div>
+            <div class="auth-alert auth-alert--error">
+              <p class="auth-alert__title">Error en el registro</p>
+              <p class="auth-alert__message">{{ facade.registerError() }}</p>
             </div>
           }
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
-            <div>
-              <label class="mb-1.5 block text-sm font-medium" style="color: #2d3748">
-                Email <span style="color: #c47a7a">*</span>
-              </label>
-              <app-form-input
-                type="email"
-                placeholder="tu@email.com"
-                icon="mail"
-                autocomplete="email"
-                [value]="form.get('email')?.value ?? ''"
-                [error]="emailError()"
-                (valueChange)="onEmailChange($event)"
-                (touched)="onEmailTouched()"
-              />
-              @if (getFieldError('email')) {
-                <p class="mt-1.5 text-xs" style="color: #c47a7a">{{ getFieldError('email') }}</p>
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+            <div class="auth-field">
+              <label class="auth-label" for="register-email">Email</label>
+              <div class="auth-input-wrap">
+                <span class="auth-input-icon" aria-hidden="true">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </span>
+                <input
+                  id="register-email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="tu@email.com"
+                  autocomplete="email"
+                  class="input-field w-full auth-input--with-icon"
+                  [class.error]="emailFieldError()"
+                />
+              </div>
+              @if (emailFieldError()) {
+                <p class="auth-field-error">
+                  <span class="auth-field-error__icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </span>
+                  <span>{{ emailFieldError() }}</span>
+                </p>
               }
             </div>
 
-            <div>
-              <label class="mb-1.5 block text-sm font-medium" style="color: #2d3748">
-                Contraseña <span style="color: #c47a7a">*</span>
-              </label>
-              <app-password-input
-                placeholder="Mínimo 8 caracteres"
-                autocomplete="new-password"
-                [value]="form.get('password')?.value ?? ''"
-                [error]="passwordError()"
-                [showStrengthBar]="true"
-                [showRequirements]="true"
-                (valueChange)="onPasswordChange($event)"
-                (touched)="onPasswordTouched()"
-              />
-              @if (getFieldError('password')) {
-                <p class="mt-1.5 text-xs" style="color: #c47a7a">{{ getFieldError('password') }}</p>
+            <div class="auth-field">
+              <label class="auth-label" for="register-password">Contraseña</label>
+              <div class="auth-input-wrap">
+                <span class="auth-input-icon" aria-hidden="true">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </span>
+                <input
+                  id="register-password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  placeholder="Mínimo 8 caracteres"
+                  autocomplete="new-password"
+                  class="input-field w-full auth-input--with-icon auth-input--with-toggle"
+                  [class.error]="passwordFieldError()"
+                />
+                <button
+                  type="button"
+                  class="auth-input-toggle"
+                  (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  @if (showPassword()) {
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+              @if (passwordFieldError()) {
+                <p class="auth-field-error">
+                  <span class="auth-field-error__icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </span>
+                  <span>{{ passwordFieldError() }}</span>
+                </p>
               }
             </div>
 
             <button
               type="submit"
-              [disabled]="facade.registerState() === 'loading'"
-              class="mt-2 w-full rounded-lg px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-              style="background: linear-gradient(135deg, #8faf8a 0%, #6b8f66 100%)"
+              class="btn btn-primary btn-lg auth-form__submit w-full"
+              [disabled]="isSubmitting()"
             >
-              @if (facade.registerState() === 'loading') {
-                <span class="flex items-center justify-center gap-2">
-                  <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creando cuenta...
-                </span>
-              } @else {
-                Crear cuenta
-              }
+              {{ isSubmitting() ? 'Creando cuenta...' : 'Crear cuenta' }}
             </button>
           </form>
 
-          <div class="mt-8">
-            <div class="relative">
-              <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t" style="border-color: #e2e8f0"></div>
-              </div>
-              <div class="relative flex justify-center text-xs">
-                <span class="px-3" style="background: var(--bg-primary); color: #718096">o</span>
-              </div>
-            </div>
-
-            <p class="mt-6 text-center text-sm" style="color: #718096">
+          <div class="auth-divider">
+            <p class="auth-footer-link">
               ¿Ya tienes cuenta?
-              <a routerLink="/login" class="ml-1 font-semibold transition-colors hover:underline" style="color: #7daa7d">
-                Inicia sesión
-              </a>
+              <a routerLink="/login">Inicia sesión</a>
             </p>
           </div>
         </div>
       } @else {
-        <div class="animate-success-scale py-8 text-center">
-          <div class="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full animate-checkmark-bounce" style="background: #d4e7d0">
-            <svg class="h-10 w-10" style="color: #7daa7d" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        <div class="auth-success">
+          <div class="auth-header__icon" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
           </div>
-
-          <h2 class="mb-3 text-2xl font-bold" style="color: #2d3748">¡Registro exitoso!</h2>
-          
-          <p class="mb-2 text-sm" style="color: #718096">
-            Tu cuenta ha sido creada correctamente.
+          <h2 class="auth-success__title">¡Registro exitoso!</h2>
+          <p class="auth-success__text">
+            Tu cuenta ha sido creada correctamente. Revisa tu bandeja de entrada para verificar tu email.
           </p>
-          
-          <div class="mb-6 rounded-lg p-4" style="background: #f7fafc; border: 1px solid #e2e8f0">
-            <div class="flex items-start gap-3">
-              <svg class="mt-0.5 h-5 w-5 shrink-0" style="color: #7a9cc4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-              </svg>
-              <div class="text-left">
-                <p class="text-sm font-medium" style="color: #2d3748">Revisa tu bandeja de entrada</p>
-                <p class="mt-1 text-xs" style="color: #718096">
-                  Te enviamos un email de verificación. Por favor, verifica tu cuenta para comenzar a usar NotasAPP.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <p class="mb-6 text-xs" style="color: #718096">
+          <p class="auth-success__hint">
             Serás redirigido al inicio de sesión en unos momentos...
           </p>
-
-          <a routerLink="/login" class="inline-block rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl" style="background: linear-gradient(135deg, #8faf8a 0%, #6b8f66 100%)">
-            Ir a iniciar sesión
-          </a>
+          <a routerLink="/login" class="btn btn-primary btn-lg w-full no-underline">Ir a iniciar sesión</a>
         </div>
       }
     </app-auth-layout>
   `,
-  styles: [`
-    @keyframes fade-in-up {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes success-scale {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-    @keyframes checkmark-bounce {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-    }
-    .animate-fade-in-up {
-      animation: fade-in-up 0.5s ease-out;
-    }
-    .animate-fade-in {
-      animation: fade-in 0.3s ease-out;
-    }
-    .animate-success-scale {
-      animation: success-scale 0.5s ease-out;
-    }
-    .animate-checkmark-bounce {
-      animation: checkmark-bounce 0.6s ease-out 0.3s;
-    }
-  `],
 })
-export class RegisterPageComponent {
+export class RegisterPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   protected readonly facade = inject(AuthFlowFacade);
-
-  private emailTouched = false;
-  private passwordTouched = false;
+  protected readonly isSubmitting = computed(() => this.facade.registerState() === 'loading');
+  protected readonly showPassword = signal(false);
 
   form = this.fb.group({
     email: ['', [Validators.required]],
     password: ['', [Validators.required]],
   });
 
+  ngOnInit(): void {
+    this.facade.resetRegisterState();
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
+  }
+
+  emailFieldError(): string | null {
+    return this.getFieldError('email') ?? this.emailError();
+  }
+
+  passwordFieldError(): string | null {
+    return this.getFieldError('password') ?? this.passwordError();
+  }
+
   emailError(): string | null {
     const ctrl = this.form.get('email');
-    if (!this.emailTouched || !ctrl?.invalid) return null;
+    if (!ctrl?.touched || !ctrl.invalid) return null;
     if (ctrl.hasError('required')) return 'El email es obligatorio';
     return null;
   }
 
   passwordError(): string | null {
     const ctrl = this.form.get('password');
-    if (!this.passwordTouched || !ctrl?.invalid) return null;
+    if (!ctrl?.touched || !ctrl.invalid) return null;
     if (ctrl.hasError('required')) return 'La contraseña es obligatoria';
     return null;
-  }
-
-  onEmailChange(value: string): void {
-    this.form.get('email')?.setValue(value, { emitEvent: false });
-  }
-
-  onEmailTouched(): void {
-    this.emailTouched = true;
-    this.form.get('email')?.markAsTouched();
-  }
-
-  onPasswordChange(value: string): void {
-    this.form.get('password')?.setValue(value, { emitEvent: false });
-  }
-
-  onPasswordTouched(): void {
-    this.passwordTouched = true;
-    this.form.get('password')?.markAsTouched();
   }
 
   getFieldError(field: string): string | null {
@@ -252,10 +207,7 @@ export class RegisterPageComponent {
   }
 
   onSubmit(): void {
-    this.emailTouched = true;
-    this.passwordTouched = true;
     this.form.markAllAsTouched();
-
     if (this.form.invalid) return;
 
     this.facade.signUp({

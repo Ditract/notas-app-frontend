@@ -4,6 +4,7 @@ import { FavoritesRepository } from '../domain/favorites.repository';
 import { Nota, CreateNotaData, UpdateNotaData } from '../domain/nota.model';
 import { EstadisticasResponse } from '../domain/estadisticas.model';
 import { ToastService } from '../../../shared/ui/toast.service';
+import { ChatFacade } from '../../chat/application/chat.facade';
 
 export type NotesViewMode = 'grid' | 'list';
 
@@ -12,6 +13,7 @@ export class NotesFacade {
   private readonly notesRepo = inject(NotesRepository);
   private readonly favoritesRepo = inject(FavoritesRepository);
   private readonly toast = inject(ToastService);
+  private readonly chatFacade = inject(ChatFacade);
 
   private readonly _notes = signal<Nota[]>([]);
   private readonly _favorites = signal<Set<number>>(new Set());
@@ -98,6 +100,12 @@ export class NotesFacade {
         this._notes.update((notes) => [...notes, note]);
         this._editingNote.set(null);
         this.toast.success('Nota creada', `"${note.titulo}" se ha creado exitosamente.`);
+        this.chatFacade.notifyContextual({
+          accion: 'CREAR',
+          notaId: note.id,
+          tituloNota: note.titulo,
+          categoria: note.categoria ?? undefined,
+        });
       },
       error: () => {
         this.toast.error('Error', 'No se pudo crear la nota');
@@ -113,6 +121,12 @@ export class NotesFacade {
         );
         this._editingNote.set(null);
         this.toast.success('Nota actualizada', `"${updated.titulo}" se ha actualizado.`);
+        this.chatFacade.notifyContextual({
+          accion: 'EDITAR',
+          notaId: updated.id,
+          tituloNota: updated.titulo,
+          categoria: updated.categoria ?? undefined,
+        });
       },
       error: () => {
         this.toast.error('Error', 'No se pudo actualizar la nota');
@@ -127,6 +141,12 @@ export class NotesFacade {
         this._notes.update((notes) => notes.filter((n) => n.id !== id));
         this._deletingNoteId.set(null);
         this.toast.success('Nota eliminada', note ? `"${note.titulo}" se ha eliminado.` : 'Nota eliminada.');
+        this.chatFacade.notifyContextual({
+          accion: 'BORRAR',
+          notaId: id,
+          tituloNota: note?.titulo,
+          categoria: note?.categoria ?? undefined,
+        });
       },
       error: () => {
         this.toast.error('Error', 'No se pudo eliminar la nota');
@@ -136,6 +156,7 @@ export class NotesFacade {
 
   toggleFavorite(noteId: number): void {
     const favs = this._favorites();
+    const note = this._notes().find((n) => n.id === noteId);
     if (favs.has(noteId)) {
       this.favoritesRepo.removeFavorite(noteId).subscribe({
         next: () => {
@@ -143,6 +164,12 @@ export class NotesFacade {
             const newSet = new Set(s);
             newSet.delete(noteId);
             return newSet;
+          });
+          this.chatFacade.notifyContextual({
+            accion: 'FAVORITA',
+            notaId: noteId,
+            tituloNota: note?.titulo,
+            categoria: note?.categoria ?? undefined,
           });
         },
         error: () => this.toast.error('Error', 'No se pudo quitar de favoritos'),
@@ -154,6 +181,12 @@ export class NotesFacade {
             const newSet = new Set(s);
             newSet.add(noteId);
             return newSet;
+          });
+          this.chatFacade.notifyContextual({
+            accion: 'FAVORITA',
+            notaId: noteId,
+            tituloNota: note?.titulo,
+            categoria: note?.categoria ?? undefined,
           });
         },
         error: () => this.toast.error('Error', 'No se pudo agregar a favoritos'),

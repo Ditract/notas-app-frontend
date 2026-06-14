@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 
 export interface AppConfig {
   apiBaseUrl: string;
+  chatApiBaseUrl: string;
   validation: {
     emailPattern: RegExp;
     passwordMinLength: number;
@@ -19,6 +20,7 @@ export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG', {
   providedIn: 'root',
   factory: () => ({
     apiBaseUrl: environment.apiBaseUrl,
+    chatApiBaseUrl: environment.chatApiBaseUrl,
     validation: {
       emailPattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       passwordMinLength: 8,

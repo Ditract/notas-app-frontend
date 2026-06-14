@@ -2,7 +2,7 @@ import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/cor
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthFlowFacade } from '../../application/auth-flow.facade';
-import { emailValidator } from '../../../../shared/validators/validators';
+import { createEmailValidator } from '../../../../shared/validators/validators';
 
 @Component({
   selector: 'app-verify-page',
@@ -90,10 +90,11 @@ export class VerifyPageComponent implements OnInit {
   protected readonly facade = inject(AuthFlowFacade);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly emailValidatorFn = createEmailValidator();
   protected showResendForm = false;
 
   resendForm = this.fb.group({
-    email: ['', [Validators.required, emailValidator]],
+    email: ['', [Validators.required, this.emailValidatorFn]],
   });
 
   ngOnInit(): void {

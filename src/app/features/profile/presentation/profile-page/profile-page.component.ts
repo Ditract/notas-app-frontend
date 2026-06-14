@@ -6,7 +6,7 @@ import { NotePreviewPipe } from '../../../../shared/pipes/note-preview.pipe';
 import { SpinnerComponent } from '../../../../shared/ui/spinner.component';
 import { EmptyStateComponent } from '../../../../shared/ui/empty-state.component';
 import { NoteViewDialogComponent } from '../../../notes/presentation/components/note-view-dialog/note-view-dialog.component';
-import { passwordValidator } from '../../../../shared/validators/validators';
+import { createPasswordValidator } from '../../../../shared/validators/validators';
 import { NotesFacade } from '../../../notes/application/notes.facade';
 
 @Component({
@@ -217,6 +217,7 @@ export class ProfilePageComponent implements OnInit {
   protected readonly notesFacade = inject(NotesFacade);
   private readonly authFacade = inject(AuthFacade);
   private readonly fb = inject(FormBuilder);
+  private readonly passwordValidatorFn = createPasswordValidator();
 
   protected showEditName = false;
   protected showChangePassword = false;
@@ -228,7 +229,7 @@ export class ProfilePageComponent implements OnInit {
   passwordForm = this.fb.group(
     {
       passwordActual: ['', [Validators.required]],
-      nuevaPassword: ['', [Validators.required, passwordValidator]],
+      nuevaPassword: ['', [Validators.required, this.passwordValidatorFn]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: this.passwordMatchValidator },
