@@ -4,6 +4,7 @@ import { ChatRepository } from '../domain/chat.repository';
 import { ChatApiResponse, ContextualChatRequest } from '../domain/chat-api.model';
 import { APP_CONFIG } from '../../../core/config/app-config.token';
 import { TokenStorage } from '../../../core/auth/infrastructure/token.storage';
+import { ApiError, NETWORK_ERROR_MESSAGE, parseFetchApiError } from '../../../core/http/api.error';
 import { flushSseBuffer, parseSseBuffer } from './sse-parser';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +26,7 @@ export class HttpChatRepository extends ChatRepository {
       })
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error(`Welcome request failed with status ${response.status}`);
+            throw await parseFetchApiError(response);
           }
           const data = (await response.json()) as ChatApiResponse;
           this.ngZone.run(() => {
@@ -33,7 +34,7 @@ export class HttpChatRepository extends ChatRepository {
             observer.complete();
           });
         })
-        .catch((err) => this.ngZone.run(() => observer.error(err)));
+        .catch((err) => this.ngZone.run(() => observer.error(this.toFetchError(err))));
     });
   }
 
@@ -51,7 +52,7 @@ export class HttpChatRepository extends ChatRepository {
       })
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error(`Contextual request failed with status ${response.status}`);
+            throw await parseFetchApiError(response);
           }
           const data = (await response.json()) as ChatApiResponse;
           this.ngZone.run(() => {
@@ -59,7 +60,7 @@ export class HttpChatRepository extends ChatRepository {
             observer.complete();
           });
         })
-        .catch((err) => this.ngZone.run(() => observer.error(err)));
+        .catch((err) => this.ngZone.run(() => observer.error(this.toFetchError(err))));
     });
   }
 
@@ -76,8 +77,8 @@ export class HttpChatRepository extends ChatRepository {
         this.ngZone.run(() => observer.complete());
       };
 
-      const error = (err: unknown) => {
-        this.ngZone.run(() => observer.error(err));
+      const fail = (err: unknown) => {
+        this.ngZone.run(() => observer.error(this.toFetchError(err)));
       };
 
       fetch(`${this.config.chatApiBaseUrl}/chat/stream`, {
@@ -90,7 +91,7 @@ export class HttpChatRepository extends ChatRepository {
       })
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error(`Chat stream failed with status ${response.status}`);
+            throw await parseFetchApiError(response);
           }
 
           const reader = response.body?.getReader();
@@ -124,7 +125,15 @@ export class HttpChatRepository extends ChatRepository {
             }
           }
         })
-        .catch((err) => error(err));
+        .catch((err) => fail(err));
     });
+  }
+
+  private toFetchError(err: unknown): ApiError {
+    if (err && typeof err === 'object' && 'message' in err) {
+      return err as ApiError;
+    }
+
+    return { message: NETWORK_ERROR_MESSAGE, status: 0 };
   }
 }

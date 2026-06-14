@@ -2,21 +2,22 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TokenStorage } from '../auth/infrastructure/token.storage';
-import { parseApiError } from './api.error';
+import { toApiErrorFromHttp } from './api.error';
 import { throwError, catchError } from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const tokenStorage = inject(TokenStorage);
+  const isAuthRoute = req.url.includes('/auth/');
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !isAuthRoute) {
         tokenStorage.clearToken();
         router.navigate(['/login']);
       }
 
-      return throwError(() => parseApiError(error.error));
+      return throwError(() => toApiErrorFromHttp(error.status, error.error));
     }),
   );
 };

@@ -1,10 +1,10 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthRepository } from '../domain/auth.repository';
 import { AuthFacade } from '../../../core/auth/application/auth.facade';
 import { ToastService } from '../../../shared/ui/toast.service';
 import { SignInCredentials, SignUpCredentials, ResetPasswordData } from '../domain/auth.model';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiError } from '../../../core/http/api.error';
 
 export type AuthPageState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -49,17 +49,17 @@ export class AuthFlowFacade {
           this.router.navigate(['/app/notes']);
         }
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.loginState.set('error');
 
-        if (err.status === 401 && err.error?.message?.toLowerCase().includes('verificad')) {
+        if (err.status === 401 && err.message.toLowerCase().includes('verificad')) {
           this.isNotVerified.set(true);
           this.loginError.set('Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico.');
-        } else if (err.error?.validationErrors) {
-          this.registerValidationErrors.set(err.error.validationErrors);
-          this.loginError.set(err.error.message || 'Error al iniciar sesión');
+        } else if (err.validationErrors) {
+          this.registerValidationErrors.set(err.validationErrors);
+          this.loginError.set(err.message || 'Error al iniciar sesión');
         } else {
-          this.loginError.set(err.error?.message || 'Error al iniciar sesión');
+          this.loginError.set(err.message || 'Error al iniciar sesión');
         }
       },
     });
@@ -76,12 +76,12 @@ export class AuthFlowFacade {
         this.toast.success('Registro exitoso', response.mensaje || 'Por favor, verifica tu correo electrónico.');
         setTimeout(() => this.router.navigate(['/login']), 3000);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.registerState.set('error');
-        if (err.error?.validationErrors) {
-          this.registerValidationErrors.set(err.error.validationErrors);
+        if (err.validationErrors) {
+          this.registerValidationErrors.set(err.validationErrors);
         }
-        this.registerError.set(err.error?.message || 'Error al registrarse');
+        this.registerError.set(err.message || 'Error al registrarse');
       },
     });
   }
@@ -95,9 +95,9 @@ export class AuthFlowFacade {
       next: () => {
         this.forgotPasswordState.set('success');
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.forgotPasswordState.set('error');
-        this.forgotPasswordError.set(err.error?.message || 'Error al enviar el email');
+        this.forgotPasswordError.set(err.message || 'Error al enviar el email');
       },
     });
   }
@@ -111,16 +111,16 @@ export class AuthFlowFacade {
       next: () => {
         this.resetPasswordState.set('success');
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.resetPasswordState.set('error');
         if (err.status === 404) {
           this.isTokenInvalid.set(true);
           return;
         }
-        if (err.error?.validationErrors) {
-          this.resetPasswordValidationErrors.set(err.error.validationErrors);
+        if (err.validationErrors) {
+          this.resetPasswordValidationErrors.set(err.validationErrors);
         }
-        this.resetPasswordError.set(err.error?.message || 'Error al restablecer la contraseña');
+        this.resetPasswordError.set(err.message || 'Error al restablecer la contraseña');
       },
     });
   }
@@ -133,16 +133,16 @@ export class AuthFlowFacade {
       next: () => {
         this.verifyState.set('success');
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.verifyState.set('error');
         if (err.status === 404) {
           this.isTokenInvalid.set(true);
           this.verifyError.set('El token de verificación es inválido o ha expirado.');
         } else if (err.status === 400) {
           this.isAlreadyVerified.set(true);
-          this.verifyError.set(err.error?.message || 'La cuenta ya ha sido verificada.');
+          this.verifyError.set(err.message || 'La cuenta ya ha sido verificada.');
         } else {
-          this.verifyError.set(err.error?.message || 'Error al verificar la cuenta.');
+          this.verifyError.set(err.message || 'Error al verificar la cuenta.');
         }
       },
     });
@@ -157,12 +157,12 @@ export class AuthFlowFacade {
         this.resendState.set('success');
         this.toast.success('Email enviado', response.mensaje || 'Email de verificación enviado. Revisa tu correo.');
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: ApiError) => {
         this.resendState.set('error');
         if (err.status === 404) {
           this.resendError.set('No se encontró una cuenta con ese email.');
         } else {
-          this.resendError.set(err.error?.message || 'Error al reenviar el email.');
+          this.resendError.set(err.message || 'Error al reenviar el email.');
         }
       },
     });
