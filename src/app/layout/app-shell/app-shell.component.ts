@@ -4,12 +4,13 @@ import { AuthFacade } from '../../core/auth/application/auth.facade';
 import { ThemeService } from '../../core/config/theme.service';
 import { NavigationEnd, Event } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { ChatBubbleComponent } from '../../features/chat/presentation/chat-bubble/chat-bubble.component';
 
 @Component({
   selector: 'app-app-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, ChatBubbleComponent],
   template: `
     <nav style="background: var(--bg); border-bottom: 1px solid var(--border-color)" class="sticky top-0 z-40">
       <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -81,6 +82,8 @@ import { filter } from 'rxjs/operators';
     <footer style="border-top: 1px solid var(--border-color); color: var(--text-muted)" class="py-6 text-center text-sm">
       NotasAPP &copy; 2025
     </footer>
+
+    <app-chat-bubble />
   `,
 })
 export class AppShellComponent implements OnDestroy {

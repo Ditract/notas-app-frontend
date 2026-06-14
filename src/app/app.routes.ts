@@ -41,6 +41,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reset-password.html',
+        redirectTo: 'reset-password',
+        pathMatch: 'full',
+      },
+      {
         path: 'reset-password',
         loadComponent: () =>
           import('./features/auth/presentation/reset-password/reset-password-page.component').then(
@@ -50,6 +55,7 @@ export const routes: Routes = [
       {
         path: 'verify.html',
         redirectTo: 'verify',
+        pathMatch: 'full',
       },
       {
         path: 'verify',

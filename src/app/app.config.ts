@@ -11,6 +11,8 @@ import { FavoritesRepository } from './features/notes/domain/favorites.repositor
 import { HttpFavoritesRepository } from './features/notes/infrastructure/http-favorites.repository';
 import { ProfileRepository } from './features/profile/domain/profile.repository';
 import { HttpProfileRepository } from './features/profile/infrastructure/http-profile.repository';
+import { ChatRepository } from './features/chat/domain/chat.repository';
+import { HttpChatRepository } from './features/chat/infrastructure/http-chat.repository';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -22,5 +24,6 @@ export const appConfig: ApplicationConfig = {
     { provide: NotesRepository, useClass: HttpNotesRepository },
     { provide: FavoritesRepository, useClass: HttpFavoritesRepository },
     { provide: ProfileRepository, useClass: HttpProfileRepository },
+    { provide: ChatRepository, useClass: HttpChatRepository },
   ],
 };

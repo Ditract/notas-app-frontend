@@ -1,10 +1,9 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-guest-shell',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, RouterLink],
   template: `
     <nav style="background: var(--bg); border-bottom: 1px solid var(--border-color)" class="sticky top-0 z-40">

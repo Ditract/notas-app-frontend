@@ -173,4 +173,15 @@ export class AuthFlowFacade {
     this.loginError.set(null);
     this.isNotVerified.set(false);
   }
+
+  resetRegisterState(): void {
+    this.registerState.set('idle');
+    this.registerError.set(null);
+    this.registerValidationErrors.set(null);
+  }
+
+  resetForgotPasswordState(): void {
+    this.forgotPasswordState.set('idle');
+    this.forgotPasswordError.set(null);
+  }
 }
