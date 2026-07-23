@@ -75,8 +75,8 @@
 
 /* Panel */
 .chat-panel {
-  width: 400px;
-  height: 560px;
+  width: min(520px, calc(100vw - 48px));
+  height: min(640px, calc(100vh - 48px));
   display: flex;
   flex-direction: column;
   background: var(--chat-panel-bg);
@@ -305,6 +305,10 @@
   position: relative;
 }
 
+.chat-message--assistant .chat-message-bubble {
+  max-width: 100%;
+}
+
 .chat-message--user .chat-message-bubble {
   background: var(--chat-user-bubble);
   color: var(--chat-user-text);
@@ -318,7 +322,8 @@
   border-bottom-left-radius: 4px;
 }
 
-.chat-message-bubble p {
+.chat-message-bubble p,
+.chat-plain-text {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;

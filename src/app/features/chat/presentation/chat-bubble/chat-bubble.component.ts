@@ -16,6 +16,7 @@ import { ChatFacade } from '../../application/chat.facade';
 import { shouldShowTypingBubble } from '../../application/chat-typing.util';
 import { ChatSide } from '../../domain/chat-preferences.model';
 import { CHAT_BUBBLE_SIZE, CHAT_PANEL_HEIGHT } from '../../domain/chat-preferences.model';
+import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
 
 const DRAG_THRESHOLD_PX = 5;
 const MOBILE_BREAKPOINT = 420;
@@ -24,7 +25,7 @@ const MOBILE_BREAKPOINT = 420;
   selector: 'app-chat-bubble',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, AsyncPipe],
+  imports: [FormsModule, AsyncPipe, MarkdownPipe],
   styleUrls: ['./chat-bubble.component.css'],
   template: `
     @let viewState = viewState$ | async;
@@ -133,9 +134,15 @@ const MOBILE_BREAKPOINT = 420;
                 [class.chat-message--assistant]="msg.role === 'assistant'"
               >
                 <div class="chat-message-bubble">
-                  <p>{{ msg.text || '' }}</p>
-                  @if (msg.streaming && msg.text) {
-                    <span class="chat-cursor" aria-hidden="true"></span>
+                  @if (msg.role === 'user') {
+                    <p class="chat-plain-text">{{ msg.text || '' }}</p>
+                  } @else if (msg.streaming) {
+                    <p class="chat-plain-text">{{ msg.text || '' }}</p>
+                    @if (msg.text) {
+                      <span class="chat-cursor" aria-hidden="true"></span>
+                    }
+                  } @else {
+                    <div class="chat-markdown" [innerHTML]="msg.text | markdown"></div>
                   }
                 </div>
               </div>
