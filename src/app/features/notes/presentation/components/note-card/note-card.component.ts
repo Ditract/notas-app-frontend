@@ -1,5 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { NotePreviewPipe } from '../../../../../shared/pipes/note-preview.pipe';
+import { getCategoriaColor } from '../../../domain/categoria.constantes';
 
 @Component({
   selector: 'app-note-card',
@@ -72,14 +73,7 @@ export class NoteCardComponent {
   readonly toggleFavorite = output<number>();
 
   getCategoriaColor(categoria: string): string {
-    const colors: Record<string, string> = {
-      'TRABAJO': '#dbeafe',
-      'PERSONAL': '#fce7f3',
-      'IDEAS': '#fef3c7',
-      'REUNIONES': '#d1fae5',
-      'TAREAS': '#e0e7ff',
-    };
-    return colors[categoria] ?? 'var(--bg-secondary)';
+    return getCategoriaColor(categoria);
   }
 
   getRelativeTime(dateString: string): string {

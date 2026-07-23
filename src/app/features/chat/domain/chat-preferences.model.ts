@@ -12,7 +12,7 @@ export interface ChatPosition {
   offsetY: number;
 }
 
-export const CHAT_PANEL_HEIGHT = 560;
+export const CHAT_PANEL_HEIGHT = 640;
 export const CHAT_BUBBLE_SIZE = 56;
 export const CHAT_DEFAULT_OFFSET_Y = 24;
 export const CHAT_MIN_OFFSET_Y = 16;
